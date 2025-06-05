@@ -1,0 +1,17 @@
+#version 450
+
+in vec3 position;
+in vec3 normal;
+
+uniform mat4 model_view;
+uniform mat4 projection;
+
+out vec3 fragNormal;
+out vec3 fragPos;
+
+void main() {
+    vec4 worldPos = model_view * vec4(position, 1.0);
+    gl_Position = projection * worldPos;
+    fragNormal = mat3(transpose(inverse(model_view))) * normal;
+    fragPos = worldPos.xyz;
+}

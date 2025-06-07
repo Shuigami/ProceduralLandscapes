@@ -1,7 +1,8 @@
 #pragma once
 
-#include <GL/gl.h>
 #include <iostream>
+
+#include <GL/glew.h>
 
 class Vector3 {
 public:

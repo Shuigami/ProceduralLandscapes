@@ -1,14 +1,12 @@
 #include "settings.h"
 
-#include <GL/glew.h>
-#include <GL/glut.h>
-#include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
 
 #include "matrix.h"
 #include "program.h"
+#include "camera.h"
 
 GLuint program;
 std::vector<GLfloat> vertices;
@@ -16,6 +14,7 @@ std::vector<GLfloat> normals;
 GLuint VAO;
 GLuint VBO;
 GLuint normalsVBO;
+GLFWwindow *window;
 
 std::vector<std::vector<GLfloat>> createCube() {
     std::vector vertices = {
@@ -237,17 +236,24 @@ std::vector<std::vector<GLfloat>> createCylinder() {
     return {vertices, normals};
 }
 
-bool init_glut(int argc, char** argv) {
-    glutInit(&argc, argv);
-    glutInitContextVersion(4, 5);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(1024, 1024);
-    glutInitWindowPosition(10, 10);
-    glutCreateWindow("Test OpenGL - POGL");
+bool init_glfw() {
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return false;
+    }
 
-    glutDisplayFunc(display);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    window = glfwCreateWindow(1024, 1024, "Test OpenGL - POGL", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return false;
+    }
+
+    glfwMakeContextCurrent(window);
     return true;
 }
 
@@ -273,7 +279,7 @@ bool init_gl() {
 }
 
 bool init_shader() {
-    program = Program::make_program("/home/shui/Work/ING2/POGL/tp2/shaders/vertex.shd", "/home/shui/Work/ING2/POGL/tp2/shaders/fragment.shd")->get_program();
+    program = Program::make_program("/home/shui/Work/ING2/POGL/pogl-project/shaders/vertex.shd", "/home/shui/Work/ING2/POGL/pogl-project/shaders/fragment.shd")->get_program();
     if (program == 0) {
         std::cerr << "Failed to create shader program." << std::endl;
         return false;
@@ -314,9 +320,7 @@ bool init_object() {
 
 bool init_pov() {
     Matrix4 model_view = Matrix4::lookAt(
-        Vector3(2.0f, 2.0f, 5.0f),
-        Vector3(0.0f, 0.0f, 0.0f),
-        Vector3(0.0f, 1.0f, 0.0f)
+        cameraPos, cameraPos + cameraFront, cameraUp
     );
     Matrix4 projection = Matrix4::frustum(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 100.0f);
 
@@ -353,6 +357,4 @@ void display() {
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
     glBindVertexArray(0);
-    
-    glutSwapBuffers();
 }

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <GL/gl.h>
 #include <iostream>
 
 #include "vector.h"
+#include <GL/glew.h>
 
 class Matrix4 {
 public:

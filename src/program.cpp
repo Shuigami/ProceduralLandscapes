@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <GL/glew.h>
 
 Program::Program() {
     program = glCreateProgram();

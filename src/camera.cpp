@@ -26,6 +26,10 @@ void keyboardCallback(GLFWwindow* window) {
         cameraPos = cameraPos - cameraFront.cross(cameraUp).normalized() * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos = cameraPos + cameraFront.cross(cameraUp).normalized() * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        cameraPos = cameraPos + cameraUp * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        cameraPos = cameraPos - cameraUp * cameraSpeed;
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -35,7 +39,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
         firstMouse = false;
     }
 
-    float sensitivity = 0.1f;
+    float sensitivity = 0.07f;
     float xoffset = (xpos - lastX) * sensitivity;
     float yoffset = (lastY - ypos) * sensitivity; // inversé
     lastX = xpos;

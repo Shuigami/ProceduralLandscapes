@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "program.h"
+#include "camera.h"
 
 #include <GL/glew.h>
 
@@ -18,7 +19,15 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_object()) return -1;
 
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    int frameCount = 0;
+    
     while (!glfwWindowShouldClose(window)) {
+        keyboardCallback(window);
+
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
@@ -27,6 +36,15 @@ int main(int argc, char** argv) {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        
+        frameCount++;
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count();
+        if (elapsed >= 1) {
+            std::cout << "FPS: " << frameCount / elapsed << std::endl;
+            frameCount = 0;
+            lastTime = currentTime;
+        }
     }
 
     return 0;

@@ -290,8 +290,8 @@ bool init_shader() {
 }
 
 bool init_object() {
-    // auto data = createCube();
-    auto data = createCylinder();
+    auto data = createCube();
+    // auto data = createCylinder();
     vertices = data[0];
     normals = data[1];
 

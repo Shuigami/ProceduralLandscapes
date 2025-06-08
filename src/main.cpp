@@ -2,6 +2,7 @@
 #include "program.h"
 #include "camera.h"
 #include "object.h"
+#include "map.h"
 
 #include <GL/glew.h>
 
@@ -14,6 +15,12 @@
 #include <chrono>
 
 int main(int argc, char** argv) {
+    Map map(42, 0.02f, 6, 0.5f, 2.0f);
+    if (map.saveNoiseAsImage("noise_basic.png", 512, 512)) {
+        std::cout << "✓ Basic noise saved as 'noise_basic.png'" << std::endl;
+    } else {
+        std::cout << "✗ Failed to save basic noise image" << std::endl;
+    }
     if (!init_glfw()) return -1;
     if (!init_glew()) return -1;
     if (!init_gl()) return -1;

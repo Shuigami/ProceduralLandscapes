@@ -141,7 +141,6 @@ bool init_pov() {
 void display(GLuint textureID) {
     glBindVertexArray(VAO);
     
-    // Bind texture if available
     if (textureID != 0) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID);

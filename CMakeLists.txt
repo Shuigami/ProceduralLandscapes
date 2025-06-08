@@ -20,6 +20,7 @@ set(SOURCES
   src/camera.cpp
   src/main.cpp
   src/matrix.cpp
+  src/object.cpp
   src/program.cpp
   src/settings.cpp
   src/vector.cpp

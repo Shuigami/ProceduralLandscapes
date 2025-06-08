@@ -10,5 +10,6 @@ bool init_shader();
 bool init_object();
 bool init_pov();
 void display();
+void setCurrentTexture(GLuint textureID);
 
 extern GLFWwindow *window;

@@ -2,16 +2,19 @@
 
 in vec3 position;
 in vec3 normal;
+in vec2 texCoord;
 
 uniform mat4 model_view;
 uniform mat4 projection;
 
 out vec3 fragNormal;
 out vec3 fragPos;
+out vec2 fragTexCoord;
 
 void main() {
     vec4 worldPos = model_view * vec4(position, 1.0);
     gl_Position = projection * worldPos;
     fragNormal = mat3(transpose(inverse(model_view))) * normal;
     fragPos = worldPos.xyz;
+    fragTexCoord = texCoord;
 }

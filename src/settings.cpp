@@ -5,236 +5,20 @@
 #include <cmath>
 
 #include "matrix.h"
+#include "object.h"
 #include "program.h"
 #include "camera.h"
 
 GLuint program;
 std::vector<GLfloat> vertices;
 std::vector<GLfloat> normals;
+std::vector<GLfloat> texCoords;
 GLuint VAO;
 GLuint VBO;
 GLuint normalsVBO;
+GLuint texCoordsVBO;
+GLuint currentTexture = 0;
 GLFWwindow *window;
-
-std::vector<std::vector<GLfloat>> createCube() {
-    std::vector vertices = {
-        // Front face
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-
-        // Back face
-        -0.5f, -0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-
-        // Left face
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-
-        // Right face
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-
-        // Top face
-        -0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-
-        // Bottom face
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f
-    };
-
-    std::vector<GLfloat> normals = {
-        // Front face normals
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-
-        // Back face normals
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-
-        // Left face normals
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-
-        // Right face normals
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-
-        // Top face normals
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-
-        // Bottom face normals
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f
-    };
-
-    return {vertices, normals};
-}
-
-std::vector<std::vector<GLfloat>> createCylinder() {
-    std::vector<GLfloat> vertices;
-    std::vector<GLfloat> normals;
-
-    const int segments = 36;
-    const float radius = 0.5f;
-    const float height = 1.0f;
-
-    // Top circle triangles
-    for (int i = 0; i < segments; ++i) {
-        float angle1 = 2.0f * M_PI * i / segments;
-        float angle2 = 2.0f * M_PI * (i + 1) / segments;
-        
-        vertices.push_back(0.0f);
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(0.0f);
-        normals.push_back(0.0f);
-        normals.push_back(1.0f);
-        normals.push_back(0.0f);
-        
-        vertices.push_back(radius * cos(angle1));
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(radius * sin(angle1));
-        normals.push_back(0.0f);
-        normals.push_back(1.0f);
-        normals.push_back(0.0f);
-        
-        vertices.push_back(radius * cos(angle2));
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(radius * sin(angle2));
-        normals.push_back(0.0f);
-        normals.push_back(1.0f);
-        normals.push_back(0.0f);
-
-    }
-
-    // Bottom circle triangles
-    for (int i = 0; i < segments; ++i) {
-        float angle1 = 2.0f * M_PI * i / segments;
-        float angle2 = 2.0f * M_PI * (i + 1) / segments;
-        
-        vertices.push_back(0.0f);
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(0.0f);
-        normals.push_back(0.0f);
-        normals.push_back(-1.0f);
-        normals.push_back(0.0f);
-        
-        vertices.push_back(radius * cos(angle2));
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(radius * sin(angle2));
-        normals.push_back(0.0f);
-        normals.push_back(-1.0f);
-        normals.push_back(0.0f);
-        
-        vertices.push_back(radius * cos(angle1));
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(radius * sin(angle1));
-        normals.push_back(0.0f);
-        normals.push_back(-1.0f);
-        normals.push_back(0.0f);
-    }
-
-    // Side faces
-    for (int i = 0; i < segments; ++i) {
-        float angle1 = 2.0f * M_PI * i / segments;
-        float angle2 = 2.0f * M_PI * (i + 1) / segments;
-
-        // First triangle
-        vertices.push_back(radius * cos(angle1));
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(radius * sin(angle1));
-        normals.push_back(cos(angle1));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle1));
-
-        vertices.push_back(radius * cos(angle2));
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(radius * sin(angle2));
-        normals.push_back(cos(angle2));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle2));
-
-        vertices.push_back(radius * cos(angle1));
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(radius * sin(angle1));
-        normals.push_back(cos(angle1));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle1));
-
-        // Second triangle
-        vertices.push_back(radius * cos(angle2));
-        vertices.push_back(height / 2.0f);
-        vertices.push_back(radius * sin(angle2));
-        normals.push_back(cos(angle2));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle2));
-
-        vertices.push_back(radius * cos(angle2));
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(radius * sin(angle2));
-        normals.push_back(cos(angle2));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle2));
-
-        vertices.push_back(radius * cos(angle1));
-        vertices.push_back(-height / 2.0f);
-        vertices.push_back(radius * sin(angle1));
-        normals.push_back(cos(angle1));
-        normals.push_back(0.0f);
-        normals.push_back(sin(angle1));
-    }
-
-    return {vertices, normals};
-}
 
 bool init_glfw() {
     if (!glfwInit()) {
@@ -290,14 +74,16 @@ bool init_shader() {
 }
 
 bool init_object() {
-    auto data = createCube();
+    auto data = Object::makeCube();
     // auto data = createCylinder();
-    vertices = data[0];
-    normals = data[1];
+    vertices = data.getVertices();
+    normals = data.getNormals();
+    texCoords = data.getTexCoords();
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    // Vertex positions
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
@@ -305,12 +91,21 @@ bool init_object() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // Normals
     glGenBuffers(1, &normalsVBO);
     glBindBuffer(GL_ARRAY_BUFFER, normalsVBO);
     glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(1);
+
+    // Texture coordinates
+    glGenBuffers(1, &texCoordsVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, texCoordsVBO);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), texCoords.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -350,11 +145,30 @@ void display() {
     
     glBindVertexArray(VAO);
     
-    GLfloat color[] = {1.0f, 1.0f, 1.0f};
-    auto color_loc = glGetUniformLocation(program, "color");
-    glUniform3fv(color_loc, 1, color);
+    // Bind texture if available
+    if (currentTexture != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, currentTexture);
+        
+        auto textureUniform = glGetUniformLocation(program, "objectTexture");
+        glUniform1i(textureUniform, 0);
+        
+        auto useTextureUniform = glGetUniformLocation(program, "useTexture");
+        glUniform1i(useTextureUniform, 1);
+    } else {
+        auto useTextureUniform = glGetUniformLocation(program, "useTexture");
+        glUniform1i(useTextureUniform, 0);
+        
+        GLfloat color[] = {1.0f, 1.0f, 1.0f};
+        auto color_loc = glGetUniformLocation(program, "color");
+        glUniform3fv(color_loc, 1, color);
+    }
 
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
     glBindVertexArray(0);
+}
+
+void setCurrentTexture(GLuint textureID) {
+    currentTexture = textureID;
 }

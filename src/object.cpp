@@ -348,6 +348,8 @@ GLuint Object::loadTexture(const std::string& filename) {
     
     stbi_image_free(data);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    this->textureID = textureID;
     
     return textureID;
 }
@@ -370,4 +372,12 @@ std::vector<GLfloat> Object::getNormals() {
 
 std::vector<GLfloat> Object::getTexCoords() {
     return texCoords;
+}
+
+void Object::move(const GLfloat& x, const GLfloat& y, const GLfloat& z) {
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        vertices[i] += x;
+        vertices[i + 1] += y;
+        vertices[i + 2] += z;
+    }
 }

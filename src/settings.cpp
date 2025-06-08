@@ -73,12 +73,10 @@ bool init_shader() {
     return true;
 }
 
-bool init_object() {
-    auto data = Object::makeCube();
-    // auto data = createCylinder();
-    vertices = data.getVertices();
-    normals = data.getNormals();
-    texCoords = data.getTexCoords();
+bool init_object(Object& object) {
+    vertices = object.getVertices();
+    normals = object.getNormals();
+    texCoords = object.getTexCoords();
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -140,16 +138,14 @@ bool init_pov() {
     return true;
 }
 
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+void display(GLuint textureID) {
     glBindVertexArray(VAO);
     
     // Bind texture if available
-    if (currentTexture != 0) {
+    if (textureID != 0) {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, currentTexture);
-        
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
         auto textureUniform = glGetUniformLocation(program, "objectTexture");
         glUniform1i(textureUniform, 0);
         
@@ -167,6 +163,11 @@ void display() {
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
     glBindVertexArray(0);
+}
+
+void render_object(Object& object) {
+    init_object(object);
+    display(object.getTexture());
 }
 
 void setCurrentTexture(GLuint textureID) {

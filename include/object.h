@@ -25,7 +25,8 @@ public:
     std::vector<GLfloat> getVertices();
     std::vector<GLfloat> getNormals();
     std::vector<GLfloat> getTexCoords();
- 
+
+    void move(const GLfloat& x, const GLfloat& y, const GLfloat& z);
 private:
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;

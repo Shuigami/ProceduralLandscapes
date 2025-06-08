@@ -18,16 +18,13 @@ int main(int argc, char** argv) {
     if (!init_glew()) return -1;
     if (!init_gl()) return -1;
     if (!init_shader()) return -1;
-    if (!init_object()) return -1;
 
-    Object textureLoader;
-    GLuint textureID = textureLoader.loadTexture("textures/wood_0053_color_1k.jpg");
-    if (textureID != 0) {
-        setCurrentTexture(textureID);
-        std::cout << "Texture loaded successfully with ID: " << textureID << std::endl;
-    } else {
-        std::cout << "Failed to load texture, using solid color instead" << std::endl;
-    }
+    Object cube = Object::makeCube();
+    cube.loadTexture("textures/wood_0053_color_1k.jpg");
+    cube.move(0.0f, 0.0f, -5.0f);
+
+    Object cube2 = Object::makeCube();
+    cube2.move(2.0f, 0.0f, -5.0f);
 
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -40,9 +37,10 @@ int main(int argc, char** argv) {
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         if (!init_pov()) return -1;
-        display();
+        render_object(cube);
+        render_object(cube2);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

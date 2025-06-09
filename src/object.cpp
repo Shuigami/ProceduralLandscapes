@@ -338,8 +338,6 @@ GLuint Object::loadTexture(const std::string& filename) {
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
-        
-        std::cout << "Texture loaded successfully: " << filename << " (" << width << "x" << height << ", " << nrChannels << " channels)" << std::endl;
     } else {
         std::cerr << "Failed to load texture: " << filename << std::endl;
         glDeleteTextures(1, &textureID);
@@ -349,8 +347,6 @@ GLuint Object::loadTexture(const std::string& filename) {
     stbi_image_free(data);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    this->textureID = textureID;
-    
     return textureID;
 }
 
@@ -374,10 +370,36 @@ std::vector<GLfloat> Object::getTexCoords() {
     return texCoords;
 }
 
+std::vector<GLfloat> Object::getPosition() const {
+    return {x, y, z};
+}
+
 void Object::move(const GLfloat& x, const GLfloat& y, const GLfloat& z) {
     for (size_t i = 0; i < vertices.size(); i += 3) {
         vertices[i] += x;
         vertices[i + 1] += y;
         vertices[i + 2] += z;
     }
+
+    this->x += x;
+    this->y += y;
+    this->z += z;
+}
+
+void Object::scale(const GLfloat& x, const GLfloat& y, const GLfloat& z) {
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        vertices[i] *= x;
+        vertices[i + 1] *= y;
+        vertices[i + 2] *= z;
+    }
+    
+    for (size_t i = 0; i < normals.size(); i += 3) {
+        normals[i] *= x;
+        normals[i + 1] *= y;
+        normals[i + 2] *= z;
+    }
+}
+
+bool Object::operator==(const Object& other) const {
+    return this->x == other.x && this->y == other.y && this->z == other.z && this->vertices == other.vertices && this->normals == other.normals && this->texCoords == other.texCoords && this->textureID == other.textureID;
 }

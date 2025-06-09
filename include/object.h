@@ -14,22 +14,29 @@ public:
         : vertices(vertices), normals(normals), texCoords(texCoords) {}
     Object(const Object&) = default;
     Object(Object&&) = default;
+    Object& operator=(const Object&) = default;
+    bool operator==(const Object& other) const;
 
     static Object makeCube();
     static Object makeCylinder();
 
-    GLuint loadTexture(const std::string& filename);
+    static GLuint loadTexture(const std::string& filename);
 
     void setTexture(GLuint textureID);
     GLuint getTexture() const;
     std::vector<GLfloat> getVertices();
     std::vector<GLfloat> getNormals();
     std::vector<GLfloat> getTexCoords();
+    std::vector<GLfloat> getPosition() const;
 
     void move(const GLfloat& x, const GLfloat& y, const GLfloat& z);
+    void scale(const GLfloat& x, const GLfloat& y, const GLfloat& z);
 private:
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;
     std::vector<GLfloat> texCoords;
     GLuint textureID = 0;
+    GLfloat x = 0.0f;
+    GLfloat y = 0.0f;
+    GLfloat z = 0.0f;
 };

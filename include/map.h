@@ -1,14 +1,23 @@
 #pragma once
+
 #include <string>
+#include <vector>
+
+#include "object.h"
 
 class Map {
     private:
+        int chunkSize = 1;
+        int nbChunks = 32;
         int seed;
         float scale;
         int octaves;
         float persistence;
         float lacunarity;
-        
+
+        std::vector<Object> objects;
+        std::vector<GLuint> textures;
+
         float fade(float t);
         float lerp(float t, float a, float b);
         float grad(int hash, float x, float y);
@@ -38,4 +47,8 @@ class Map {
         
         bool saveNoiseAsImage(const std::string& filename, int width, int height, 
                              float offsetX = 0.0f, float offsetY = 0.0f);
+
+        std::vector<int> getChunkCoordinates(int x, int y);
+        std::vector<Object> generateObjects(int x, int y);
+        void assignColorToObject(Object& object, float value);
 };

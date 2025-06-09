@@ -13,11 +13,10 @@ GLuint program;
 std::vector<GLfloat> vertices;
 std::vector<GLfloat> normals;
 std::vector<GLfloat> texCoords;
-GLuint VAO;
-GLuint VBO;
-GLuint normalsVBO;
-GLuint texCoordsVBO;
-GLuint currentTexture = 0;
+GLuint VAO = 0;
+GLuint VBO = 0;
+GLuint normalsVBO = 0;
+GLuint texCoordsVBO = 0;
 GLFWwindow *window;
 
 bool init_glfw() {
@@ -74,6 +73,23 @@ bool init_shader() {
 }
 
 bool init_object(Object& object) {
+    if (VAO != 0) {
+        glDeleteVertexArrays(1, &VAO);
+        VAO = 0;
+    }
+    if (VBO != 0) {
+        glDeleteBuffers(1, &VBO);
+        VBO = 0;
+    }
+    if (normalsVBO != 0) {
+        glDeleteBuffers(1, &normalsVBO);
+        normalsVBO = 0;
+    }
+    if (texCoordsVBO != 0) {
+        glDeleteBuffers(1, &texCoordsVBO);
+        texCoordsVBO = 0;
+    }
+
     vertices = object.getVertices();
     normals = object.getNormals();
     texCoords = object.getTexCoords();
@@ -167,8 +183,4 @@ void display(GLuint textureID) {
 void render_object(Object& object) {
     init_object(object);
     display(object.getTexture());
-}
-
-void setCurrentTexture(GLuint textureID) {
-    currentTexture = textureID;
 }

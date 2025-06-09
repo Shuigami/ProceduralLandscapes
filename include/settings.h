@@ -13,6 +13,5 @@ bool init_object(Object& object);
 bool init_pov();
 void display(GLuint textureID = 0);
 void render_object(Object& object);
-void setCurrentTexture(GLuint textureID);
 
 extern GLFWwindow *window;

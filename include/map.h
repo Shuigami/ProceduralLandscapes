@@ -2,18 +2,20 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "object.h"
 
 class Map {
     private:
-        int chunkSize = 1;
-        int nbChunks = 32;
+        int nbChunks = 64;
         int seed;
         float scale;
         int octaves;
         float persistence;
         float lacunarity;
+
+        std::chrono::high_resolution_clock::time_point lastTime;
 
         std::vector<Object> objects;
         std::vector<GLuint> textures;

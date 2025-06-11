@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Vector3 cameraPos(0.0f, 0.0f, 0.0f);
+Vector3 cameraPos(0.0f, 50.0f, 0.0f);
 Vector3 cameraFront(0.0f, 0.0f, -1.0f);
 Vector3 cameraUp(0.0f, 1.0f, 0.0f);
 

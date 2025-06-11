@@ -28,11 +28,11 @@ int main(int argc, char** argv) {
     auto lastTime = std::chrono::high_resolution_clock::now();
     int frameCount = 0;
     int secondsElapsed = 0;
-    
+
     while (!glfwWindowShouldClose(window)) {
         keyboardCallback(window);
 
-        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+        glClearColor(0.12f, 0.65f, 0.85f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (!init_pov()) return -1;

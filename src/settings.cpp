@@ -140,8 +140,8 @@ bool init_pov() {
     glUniformMatrix4fv(projection_loc, 1, GL_TRUE, projection.data);
 
     GLfloat lightPos[] = {-5.0f, 5.0f, 5.0f};
-    GLfloat lightColor[] = {1.0f, 1.0f, 1.0f};
-    GLfloat ambientLightIntensity[] = {0.1f, 0.1f, 0.1f};
+    GLfloat lightColor[] = {1.0f, 1.0f, 0.7f};
+    GLfloat ambientLightIntensity[] = {0.3f, 0.3f, 0.3f};
 
     auto lightPos_loc = glGetUniformLocation(program, "lightPos");
     auto lightColor_loc = glGetUniformLocation(program, "lightColor");

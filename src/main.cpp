@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
     if (!init_glew()) return -1;
     if (!init_gl()) return -1;
     if (!init_shader()) return -1;
+    if (!init_pov()) return -1;
 
     Map map(42, 0.02f, 6, 0.5f, 2.0f);
 
@@ -37,7 +38,7 @@ int main(int argc, char** argv) {
         glClearColor(0.12f, 0.65f, 0.85f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (!init_pov()) return -1;
+        update_camera();
 
         std::vector<Object> generatedObjects = map.generateObjects(cameraPos.x, cameraPos.z);
         for (auto& obj : generatedObjects) {

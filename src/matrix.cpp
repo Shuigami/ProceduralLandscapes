@@ -31,12 +31,13 @@ Matrix4& Matrix4::operator=(const Matrix4& other) {
 
 Matrix4 Matrix4::operator*(const Matrix4& other) const {
     Matrix4 result;
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            result.data[i * 4 + j] = data[i * 4] * other.data[j] +
-                                      data[i * 4 + 1] * other.data[j + 4] +
-                                      data[i * 4 + 2] * other.data[j + 8] +
-                                      data[i * 4 + 3] * other.data[j + 12];
+    // Column-major matrix multiplication
+    for (int col = 0; col < 4; ++col) {
+        for (int row = 0; row < 4; ++row) {
+            result.data[col * 4 + row] = data[0 * 4 + row] * other.data[col * 4 + 0] +
+                                        data[1 * 4 + row] * other.data[col * 4 + 1] +
+                                        data[2 * 4 + row] * other.data[col * 4 + 2] +
+                                        data[3 * 4 + row] * other.data[col * 4 + 3];
         }
     }
     return result;
@@ -114,18 +115,19 @@ Matrix4 Matrix4::rotation(const GLfloat &angle, const GLfloat &x, const GLfloat 
     Matrix4 result;
     GLfloat c = std::cos(angle);
     GLfloat s = std::sin(angle);
+    // Column-major order for OpenGL
     result.data[0] = c + (1 - c) * x * x;
-    result.data[1] = (1 - c) * x * y - s * z;
-    result.data[2] = (1 - c) * x * z + s * y;
+    result.data[1] = (1 - c) * x * y + s * z;
+    result.data[2] = (1 - c) * x * z - s * y;
     result.data[3] = 0.0f;
 
-    result.data[4] = (1 - c) * y * x + s * z;
+    result.data[4] = (1 - c) * y * x - s * z;
     result.data[5] = c + (1 - c) * y * y;
-    result.data[6] = (1 - c) * y * z - s * x;
+    result.data[6] = (1 - c) * y * z + s * x;
     result.data[7] = 0.0f;
 
-    result.data[8] = (1 - c) * z * x - s * y;
-    result.data[9] = (1 - c) * z * y + s * x;
+    result.data[8] = (1 - c) * z * x + s * y;
+    result.data[9] = (1 - c) * z * y - s * x;
     result.data[10] = c + (1 - c) * z * z;
     result.data[11] = 0.0f;
 
@@ -156,23 +158,23 @@ Matrix4 Matrix4::lookAt(const Vector3& eye, const Vector3& center, const Vector3
 
     Matrix4 result;
     result.data[0] = s.x;
-    result.data[1] = s.y;
-    result.data[2] = s.z;
-    result.data[3] = -s.dot(eye);
+    result.data[1] = u.x;
+    result.data[2] = -f.x;
+    result.data[3] = 0.0f;
 
-    result.data[4] = u.x;
+    result.data[4] = s.y;
     result.data[5] = u.y;
-    result.data[6] = u.z;
-    result.data[7] = -u.dot(eye);
+    result.data[6] = -f.y;
+    result.data[7] = 0.0f;
 
-    result.data[8] = -f.x;
-    result.data[9] = -f.y;
+    result.data[8] = s.z;
+    result.data[9] = u.z;
     result.data[10] = -f.z;
-    result.data[11] = f.dot(eye);
+    result.data[11] = 0.0f;
 
-    result.data[12] = 0.0f;
-    result.data[13] = 0.0f;
-    result.data[14] = 0.0f;
+    result.data[12] = -s.dot(eye);
+    result.data[13] = -u.dot(eye);
+    result.data[14] = f.dot(eye);
     result.data[15] = 1.0f;
 
     return result;
@@ -182,22 +184,22 @@ Matrix4 Matrix4::frustum(const GLfloat &left, const GLfloat &right, const GLfloa
     Matrix4 result;
     result.data[0] = (2 * z_near) / (right - left);
     result.data[1] = 0.0f;
-    result.data[2] = (right + left) / (right - left);
+    result.data[2] = 0.0f;
     result.data[3] = 0.0f;
 
     result.data[4] = 0.0f;
     result.data[5] = (2 * z_near) / (top - bottom);
-    result.data[6] = (top + bottom) / (top - bottom);
+    result.data[6] = 0.0f;
     result.data[7] = 0.0f;
 
-    result.data[8] = 0.0f;
-    result.data[9] = 0.0f;
+    result.data[8] = (right + left) / (right - left);
+    result.data[9] = (top + bottom) / (top - bottom);
     result.data[10] = -(z_far + z_near) / (z_far - z_near);
-    result.data[11] = -(2 * z_far * z_near) / (z_far - z_near);
+    result.data[11] = -1.0f;
 
     result.data[12] = 0.0f;
     result.data[13] = 0.0f;
-    result.data[14] = -1.0f;
+    result.data[14] = -(2 * z_far * z_near) / (z_far - z_near);
     result.data[15] = 0.0f;
 
     return result;

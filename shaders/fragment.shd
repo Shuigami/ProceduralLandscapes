@@ -1,8 +1,8 @@
 #version 450
 
 uniform vec3 color;
-uniform vec3 lightPos;
-uniform vec3 lightColor;
+uniform vec3 sunDirection;
+uniform vec3 sunColor;
 uniform vec3 ambientLightIntensity;
 uniform sampler2D objectTexture;
 uniform bool useTexture;
@@ -21,13 +21,17 @@ void main() {
         materialColor = color;
     }
     
-    vec3 ambient = ambientLightIntensity * materialColor;
+    vec3 ambient = ambientLightIntensity * materialColor * 0.2;
 
     vec3 norm = normalize(fragNormal);
-    vec3 lightDir = normalize(lightPos - fragPos);
-    // vec3 lightDir = vec3(0.1, 1.0, 0.1);
+    vec3 lightDir = normalize(sunDirection); 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor * materialColor;
+    vec3 diffuse = diff * sunColor * materialColor;
+    
+    vec3 viewDir = normalize(-fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+    vec3 specular = spec * sunColor * 0.3;
 
     output_color = ambient + diffuse;
 }

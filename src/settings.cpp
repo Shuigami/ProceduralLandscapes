@@ -9,6 +9,10 @@
 #include "program.h"
 #include "camera.h"
 
+const Vector3 SUN_DIRECTION_WORLD(-0.3f, 1.0f, -0.5f);
+const Vector3 SUN_COLOR(1.0f, 0.95f, 0.8f);
+const Vector3 AMBIENT_COLOR(0.2f, 0.2f, 0.25f);
+
 GLuint program;
 std::vector<GLfloat> vertices;
 std::vector<GLfloat> normals;
@@ -136,22 +140,47 @@ bool init_pov() {
     auto model_view_loc = glGetUniformLocation(program, "model_view");
     auto projection_loc = glGetUniformLocation(program, "projection");
 
-    glUniformMatrix4fv(model_view_loc, 1, GL_TRUE, model_view.data);
-    glUniformMatrix4fv(projection_loc, 1, GL_TRUE, projection.data);
+    glUniformMatrix4fv(model_view_loc, 1, GL_FALSE, model_view.data);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection.data);
 
-    GLfloat lightPos[] = {-5.0f, 5.0f, 5.0f};
-    GLfloat lightColor[] = {1.0f, 1.0f, 0.7f};
-    GLfloat ambientLightIntensity[] = {0.3f, 0.3f, 0.3f};
+    Vector3 worldSunDirection = SUN_DIRECTION_WORLD.normalized();
+    
+    GLfloat viewSunDirX = model_view.data[0] * worldSunDirection.x + model_view.data[4] * worldSunDirection.y + model_view.data[8] * worldSunDirection.z;
+    GLfloat viewSunDirY = model_view.data[1] * worldSunDirection.x + model_view.data[5] * worldSunDirection.y + model_view.data[9] * worldSunDirection.z;
+    GLfloat viewSunDirZ = model_view.data[2] * worldSunDirection.x + model_view.data[6] * worldSunDirection.y + model_view.data[10] * worldSunDirection.z;
+    
+    GLfloat sunDirection[] = {viewSunDirX, viewSunDirY, viewSunDirZ};
+    GLfloat sunColor[] = {SUN_COLOR.x, SUN_COLOR.y, SUN_COLOR.z};
+    GLfloat ambientLightIntensity[] = {AMBIENT_COLOR.x, AMBIENT_COLOR.y, AMBIENT_COLOR.z};
 
-    auto lightPos_loc = glGetUniformLocation(program, "lightPos");
-    auto lightColor_loc = glGetUniformLocation(program, "lightColor");
+    auto sunDirection_loc = glGetUniformLocation(program, "sunDirection");
+    auto sunColor_loc = glGetUniformLocation(program, "sunColor");
     auto ambientLightIntensity_loc = glGetUniformLocation(program, "ambientLightIntensity");
 
-    glUniform3fv(lightPos_loc, 1, lightPos);
-    glUniform3fv(lightColor_loc, 1, lightColor);
+    glUniform3fv(sunDirection_loc, 1, sunDirection);
+    glUniform3fv(sunColor_loc, 1, sunColor);
     glUniform3fv(ambientLightIntensity_loc, 1, ambientLightIntensity);
 
     return true;
+}
+
+void update_camera() {
+    Matrix4 model_view = Matrix4::lookAt(
+        cameraPos, cameraPos + cameraFront, cameraUp
+    );
+
+    auto model_view_loc = glGetUniformLocation(program, "model_view");
+    glUniformMatrix4fv(model_view_loc, 1, GL_FALSE, model_view.data);
+
+    Vector3 worldSunDirection = SUN_DIRECTION_WORLD.normalized();
+    
+    GLfloat viewSunDirX = model_view.data[0] * worldSunDirection.x + model_view.data[4] * worldSunDirection.y + model_view.data[8] * worldSunDirection.z;
+    GLfloat viewSunDirY = model_view.data[1] * worldSunDirection.x + model_view.data[5] * worldSunDirection.y + model_view.data[9] * worldSunDirection.z;
+    GLfloat viewSunDirZ = model_view.data[2] * worldSunDirection.x + model_view.data[6] * worldSunDirection.y + model_view.data[10] * worldSunDirection.z;
+    
+    GLfloat sunDirection[] = {viewSunDirX, viewSunDirY, viewSunDirZ};
+    auto sunDirection_loc = glGetUniformLocation(program, "sunDirection");
+    glUniform3fv(sunDirection_loc, 1, sunDirection);
 }
 
 void display(GLuint textureID) {

@@ -8,7 +8,7 @@
 
 class Map {
     private:
-        int nbChunks = 64;
+        int nbChunks = 16;
         int seed;
         float scale;
         int octaves;

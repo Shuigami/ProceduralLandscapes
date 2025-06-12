@@ -29,6 +29,8 @@ int main(int argc, char** argv) {
     int frameCount = 0;
     int secondsElapsed = 0;
 
+    printf("Renderer: %s\n", glGetString(GL_RENDERER));
+
     while (!glfwWindowShouldClose(window)) {
         keyboardCallback(window);
 

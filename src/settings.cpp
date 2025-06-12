@@ -62,7 +62,7 @@ bool init_gl() {
 }
 
 bool init_shader() {
-    program = Program::make_program("/home/shui/Work/ING2/POGL/pogl-project/shaders/vertex.shd", "/home/shui/Work/ING2/POGL/pogl-project/shaders/fragment.shd")->get_program();
+    program = Program::make_program("shaders/vertex.shd", "shaders/fragment.shd")->get_program();
     if (program == 0) {
         std::cerr << "Failed to create shader program." << std::endl;
         return false;

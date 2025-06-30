@@ -307,6 +307,83 @@ Object Object::makeCylinder() {
     return Object(vertices, normals, texCoords);
 }
 
+Object Object::makeTerrain(int width, int height, float spacing) {
+    std::vector<GLfloat> vertices;
+    std::vector<GLfloat> normals;
+    std::vector<GLfloat> texCoords;
+    
+    // Generate vertices for a grid mesh
+    // Create triangles for each quad in the grid
+    for (int z = 0; z < height - 1; z++) {
+        for (int x = 0; x < width - 1; x++) {
+            // Calculate the four corners of the current quad
+            float x0 = x * spacing;
+            float x1 = (x + 1) * spacing;
+            float z0 = z * spacing;
+            float z1 = (z + 1) * spacing;
+            
+            // Texture coordinates for the quad corners
+            float u0 = (float)x / (width - 1);
+            float u1 = (float)(x + 1) / (width - 1);
+            float v0 = (float)z / (height - 1);
+            float v1 = (float)(z + 1) / (height - 1);
+            
+            // First triangle (bottom-left, top-left, bottom-right) - CCW
+            // Bottom-left
+            vertices.push_back(x0);
+            vertices.push_back(0.0f);
+            vertices.push_back(z0);
+            texCoords.push_back(u0);
+            texCoords.push_back(v0);
+            
+            // Top-left
+            vertices.push_back(x0);
+            vertices.push_back(0.0f);
+            vertices.push_back(z1);
+            texCoords.push_back(u0);
+            texCoords.push_back(v1);
+            
+            // Bottom-right
+            vertices.push_back(x1);
+            vertices.push_back(0.0f);
+            vertices.push_back(z0);
+            texCoords.push_back(u1);
+            texCoords.push_back(v0);
+            
+            // Second triangle (bottom-right, top-left, top-right) - CCW
+            // Bottom-right
+            vertices.push_back(x1);
+            vertices.push_back(0.0f);
+            vertices.push_back(z0);
+            texCoords.push_back(u1);
+            texCoords.push_back(v0);
+            
+            // Top-left
+            vertices.push_back(x0);
+            vertices.push_back(0.0f);
+            vertices.push_back(z1);
+            texCoords.push_back(u0);
+            texCoords.push_back(v1);
+            
+            // Top-right
+            vertices.push_back(x1);
+            vertices.push_back(0.0f);
+            vertices.push_back(z1);
+            texCoords.push_back(u1);
+            texCoords.push_back(v1);
+            
+            // Add normals (pointing up, will be recalculated later)
+            for (int i = 0; i < 6; i++) {
+                normals.push_back(0.0f);
+                normals.push_back(1.0f);
+                normals.push_back(0.0f);
+            }
+        }
+    }
+    
+    return Object(vertices, normals, texCoords);
+}
+
 GLuint Object::loadTexture(const std::string& filename) {
     GLuint textureID;
     glGenTextures(1, &textureID);
@@ -384,6 +461,26 @@ void Object::move(const GLfloat& x, const GLfloat& y, const GLfloat& z) {
     this->x += x;
     this->y += y;
     this->z += z;
+}
+
+void Object::rotate(const GLfloat& angle, const std::vector<GLfloat>& axis) {
+    GLfloat rad = angle * M_PI / 180.0f;
+    GLfloat c = cos(rad);
+    GLfloat s = sin(rad);
+    GLfloat x = axis[0];
+    GLfloat y = axis[1];
+    GLfloat z = axis[2];
+    
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        GLfloat vx = vertices[i] - this->x;
+        GLfloat vy = vertices[i + 1] - this->y;
+        GLfloat vz = vertices[i + 2] - this->z;
+
+        // Rotate around the specified axis
+        vertices[i] = (c + (1 - c) * x * x) * vx + ((1 - c) * x * y - s * z) * vy + ((1 - c) * x * z + s * y) * vz + this->x;
+        vertices[i + 1] = ((1 - c) * y * x + s * z) * vx + (c + (1 - c) * y * y) * vy + ((1 - c) * y * z - s * x) * vz + this->y;
+        vertices[i + 2] = ((1 - c) * z * x - s * y) * vx + ((1 - c) * z * y + s * x) * vy + (c + (1 - c) * z * z) * vz + this->z;
+    }
 }
 
 void Object::scale(const GLfloat& x, const GLfloat& y, const GLfloat& z) {

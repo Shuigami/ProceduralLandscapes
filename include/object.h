@@ -19,6 +19,7 @@ public:
 
     static Object makeCube();
     static Object makeCylinder();
+    static Object makeTerrain(int width, int height, float spacing = 1.0f);
 
     static GLuint loadTexture(const std::string& filename);
 
@@ -30,6 +31,7 @@ public:
     std::vector<GLfloat> getPosition() const;
 
     void move(const GLfloat& x, const GLfloat& y, const GLfloat& z);
+    void rotate(const GLfloat& angle, const std::vector<GLfloat>& axis);
     void scale(const GLfloat& x, const GLfloat& y, const GLfloat& z);
 private:
     std::vector<GLfloat> vertices;

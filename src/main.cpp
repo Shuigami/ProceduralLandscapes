@@ -32,6 +32,15 @@ int main(int argc, char** argv) {
 
     printf("Renderer: %s\n", glGetString(GL_RENDERER));
 
+    Object cube = Object::makeCube();
+    cube.setTexture(Object::loadTexture("textures/color_0.png"));
+    cube.move(0.0f, 0.0f, 0.0f);
+    cube.scale(1.0f, 1.0f, 1.0f);
+
+    float terrainSpacing = 2.0f;
+    int terrainWidth = 64;
+    int terrainHeight = 64;
+
     while (!glfwWindowShouldClose(window)) {
         keyboardCallback(window);
 
@@ -40,10 +49,16 @@ int main(int argc, char** argv) {
 
         update_camera();
 
-        std::vector<Object> generatedObjects = map.generateObjects(cameraPos.x, cameraPos.z);
-        for (auto& obj : generatedObjects) {
-            render_object(obj);
-        }
+        Object terrain = map.generateTerrain(terrainWidth / terrainSpacing, terrainHeight / terrainSpacing, terrainSpacing, 50.0f, 0.0f, 0.0f);
+        terrain.setTexture(Object::loadTexture("textures/color_1.png"));
+
+        Object terrain2 = map.generateTerrain(terrainWidth / terrainSpacing, terrainHeight / terrainSpacing, terrainSpacing, 50.0f, terrainWidth, 0.0f);
+        terrain2.setTexture(Object::loadTexture("textures/color_2.png"));
+        terrain2.move(terrainWidth, 0.0f, 0.0f);
+
+        render_object(terrain);
+        render_object(terrain2);
+        render_object(cube);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

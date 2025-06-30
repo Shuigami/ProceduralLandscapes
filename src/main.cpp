@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     auto lastTime = std::chrono::high_resolution_clock::now();
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
     int frameCount = 0;
     int secondsElapsed = 0;
 
@@ -38,26 +39,25 @@ int main(int argc, char** argv) {
     cube.scale(1.0f, 1.0f, 1.0f);
 
     float terrainSpacing = 2.0f;
-    int terrainWidth = 64;
-    int terrainHeight = 64;
+    float terrainHeightMultiplier = 50.0f;
 
     while (!glfwWindowShouldClose(window)) {
-        keyboardCallback(window);
+        auto currentFrameTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>(currentFrameTime - lastFrameTime).count();
+        lastFrameTime = currentFrameTime;
+        
+        keyboardCallback(window, deltaTime);
 
         glClearColor(0.12f, 0.65f, 0.85f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         update_camera();
 
-        Object terrain = map.generateTerrain(terrainWidth / terrainSpacing, terrainHeight / terrainSpacing, terrainSpacing, 50.0f, 0.0f, 0.0f);
-        terrain.setTexture(Object::loadTexture("textures/color_1.png"));
+        std::vector<Object> terrains = map.generateTerrains(terrainSpacing, terrainHeightMultiplier, cameraPos.x - 50.0f, cameraPos.z - 50.0f);
+        for (auto& terrain : terrains) {
+            render_object(terrain);
+        }
 
-        Object terrain2 = map.generateTerrain(terrainWidth / terrainSpacing, terrainHeight / terrainSpacing, terrainSpacing, 50.0f, terrainWidth, 0.0f);
-        terrain2.setTexture(Object::loadTexture("textures/color_2.png"));
-        terrain2.move(terrainWidth, 0.0f, 0.0f);
-
-        render_object(terrain);
-        render_object(terrain2);
         render_object(cube);
 
         glfwSwapBuffers(window);

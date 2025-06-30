@@ -9,7 +9,7 @@ Vector3 cameraPos(0.0f, 50.0f, 0.0f);
 Vector3 cameraFront(0.0f, 0.0f, -1.0f);
 Vector3 cameraUp(0.0f, 1.0f, 0.0f);
 
-float cameraSpeed = 0.1f;
+float cameraSpeed = 50.0f; // Units per second
 
 float yaw = -90.0f;
 float pitch = 0.0f;
@@ -17,19 +17,21 @@ float lastX = 800.0f / 2.0f;
 float lastY = 600.0f / 2.0f;
 bool firstMouse = true;
 
-void keyboardCallback(GLFWwindow* window) {
+void keyboardCallback(GLFWwindow* window, float deltaTime) {
+    float frameSpeed = cameraSpeed * deltaTime;
+    
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos = cameraPos + cameraFront * cameraSpeed;
+        cameraPos = cameraPos + cameraFront * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos = cameraPos - cameraFront * cameraSpeed;
+        cameraPos = cameraPos - cameraFront * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos = cameraPos - cameraFront.cross(cameraUp).normalized() * cameraSpeed;
+        cameraPos = cameraPos - cameraFront.cross(cameraUp).normalized() * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos = cameraPos + cameraFront.cross(cameraUp).normalized() * cameraSpeed;
+        cameraPos = cameraPos + cameraFront.cross(cameraUp).normalized() * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        cameraPos = cameraPos + cameraUp * cameraSpeed;
+        cameraPos = cameraPos + cameraUp * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        cameraPos = cameraPos - cameraUp * cameraSpeed;
+        cameraPos = cameraPos - cameraUp * frameSpeed;
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {

@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-void keyboardCallback(GLFWwindow* window);
+void keyboardCallback(GLFWwindow* window, float deltaTime);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 
 extern Vector3 cameraPos;

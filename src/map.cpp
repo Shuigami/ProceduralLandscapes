@@ -178,19 +178,6 @@ struct PairHash {
 };
 
 std::vector<Object> Map::generateObjects(int x, int y) {
-    // bool firstCall = false;
-    // if (lastTime == std::chrono::high_resolution_clock::time_point()) {
-    //     lastTime = std::chrono::high_resolution_clock::now();
-    //     firstCall = true;
-    // }
-    // auto currentTime = std::chrono::high_resolution_clock::now();
-    // auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count();
-    // if (elapsed < 1 && !firstCall) {
-    //     return objects;
-    // } else {
-    //     lastTime = currentTime;
-    // }
-
     std::vector<int> chunkCoords = getChunkCoordinates(x, y);
     int chunkX = chunkCoords[0];
     int chunkY = chunkCoords[1];
@@ -250,50 +237,38 @@ void Map::assignColorToObject(Object& object, float value) {
     }
 }
 
-Object Map::generateTerrain(int width, int height, float spacing, 
-                           float heightMultiplier, float offsetX, float offsetY) {
-    // Create a base terrain mesh
-    Object terrain = Object::makeTerrain(width, height, spacing);
-    
-    // Get the vertices to modify heights
+Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX, float offsetY) {
+    Object terrain = Object::makeTerrain(chunkSize, chunkSize, spacing);
+
     std::vector<GLfloat> vertices = terrain.getVertices();
     std::vector<GLfloat> normals = terrain.getNormals();
     
-    // Modify heights based on Perlin noise
     for (int i = 0; i < vertices.size(); i += 3) {
         float x = vertices[i] + offsetX;
         float z = vertices[i + 2] + offsetY;
         
-        // Get height from Perlin noise
         float noiseValue = getOctaveNoise(x, z);
         
-        // Normalize noise value from [-1, 1] to [0, 1] and apply height multiplier
         float normalizedHeight = (noiseValue + 1.0f) * 0.5f;
         normalizedHeight = std::max(0.0f, std::min(1.0f, normalizedHeight));
         
-        // Set the Y coordinate (height)
         vertices[i + 1] = normalizedHeight * heightMultiplier;
     }
     
-    // Recalculate normals for proper lighting
-    for (int i = 0; i < vertices.size(); i += 9) { // Every triangle (3 vertices * 3 components)
+    for (int i = 0; i < vertices.size(); i += 9) {
         if (i + 8 < vertices.size()) {
-            // Get the three vertices of the triangle
             glm::vec3 v1(vertices[i], vertices[i + 1], vertices[i + 2]);
             glm::vec3 v2(vertices[i + 3], vertices[i + 4], vertices[i + 5]);
             glm::vec3 v3(vertices[i + 6], vertices[i + 7], vertices[i + 8]);
             
-            // Calculate normal using cross product (ensure correct winding order)
             glm::vec3 edge1 = v2 - v1;
             glm::vec3 edge2 = v3 - v1;
             glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
             
-            // Ensure normal points upward (positive Y direction)
             if (normal.y < 0.0f) {
                 normal = -normal;
             }
             
-            // Set the normal for all three vertices of this triangle
             for (int j = 0; j < 3; j++) {
                 int normalIndex = i + j * 3;
                 normals[normalIndex] = normal.x;
@@ -303,10 +278,8 @@ Object Map::generateTerrain(int width, int height, float spacing,
         }
     }
     
-    // Create a new object with modified vertices and normals
     Object modifiedTerrain(vertices, normals, terrain.getTexCoords());
     
-    // Calculate average height for color assignment
     float avgHeight = 0.0f;
     int heightCount = 0;
     for (int i = 1; i < vertices.size(); i += 3) {
@@ -315,9 +288,27 @@ Object Map::generateTerrain(int width, int height, float spacing,
     }
     if (heightCount > 0) {
         avgHeight /= heightCount;
-        float normalizedAvgHeight = (avgHeight / heightMultiplier) * 2.0f - 1.0f; // Convert back to [-1, 1]
+        float normalizedAvgHeight = (avgHeight / heightMultiplier) * 2.0f - 1.0f;
         assignColorToObject(modifiedTerrain, normalizedAvgHeight);
     }
     
     return modifiedTerrain;
+}
+
+std::vector<Object> Map::generateTerrains(float spacing, float heightMultiplier, float offsetX, float offsetY) {
+    std::vector<Object> terrains;
+    
+    for (int i = 0; i < nbChunks; ++i) {
+        for (int j = 0; j < nbChunks; ++j) {
+            float actualChunkSpacing = (chunkSize - 1) * spacing;
+            Object terrain = generateTerrain(spacing, heightMultiplier, offsetX + i * actualChunkSpacing, offsetY + j * actualChunkSpacing);
+            int hashValue = std::hash<int>()(i) ^ (std::hash<int>()(j) << 1) ^ (seed << 2);
+            int textureIndex = std::abs(hashValue) % textures.size();
+            terrain.setTexture(textures[textureIndex]);
+            terrain.move(i * actualChunkSpacing, 0.0f, j * actualChunkSpacing);
+            terrains.push_back(terrain);
+        }
+    }
+    
+    return terrains;
 }

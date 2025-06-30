@@ -8,7 +8,8 @@
 
 class Map {
     private:
-        int nbChunks = 64;
+        int nbChunks = 2;
+        int chunkSize = 64;
         int seed;
         float scale;
         int octaves;
@@ -52,8 +53,11 @@ class Map {
 
         std::vector<int> getChunkCoordinates(int x, int y);
         std::vector<Object> generateObjects(int x, int y);
-        Object generateTerrain(int width, int height, float spacing = 1.0f, 
+        Object generateTerrain(float spacing = 1.0f, 
                               float heightMultiplier = 10.0f, 
                               float offsetX = 0.0f, float offsetY = 0.0f);
+        std::vector<Object> generateTerrains(float spacing = 1.0f, 
+                               float heightMultiplier = 10.0f, 
+                               float offsetX = 0.0f, float offsetY = 0.0f);
         void assignColorToObject(Object& object, float value);
 };

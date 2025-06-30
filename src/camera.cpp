@@ -1,15 +1,17 @@
 #include "camera.h"
+#include "map.h"
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 Vector3 cameraPos(0.0f, 50.0f, 0.0f);
 Vector3 cameraFront(0.0f, 0.0f, -1.0f);
 Vector3 cameraUp(0.0f, 1.0f, 0.0f);
 
-float cameraSpeed = 50.0f; // Units per second
+float cameraSpeed = 50.0f;
 
 float yaw = -90.0f;
 float pitch = 0.0f;
@@ -17,7 +19,7 @@ float lastX = 800.0f / 2.0f;
 float lastY = 600.0f / 2.0f;
 bool firstMouse = true;
 
-void keyboardCallback(GLFWwindow* window, float deltaTime) {
+void keyboardCallback(GLFWwindow* window, float deltaTime, Map& map) {
     float frameSpeed = cameraSpeed * deltaTime;
     
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -32,6 +34,35 @@ void keyboardCallback(GLFWwindow* window, float deltaTime) {
         cameraPos = cameraPos + cameraUp * frameSpeed;
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         cameraPos = cameraPos - cameraUp * frameSpeed;
+
+    static bool plusKeyPressed = false;
+    static bool minusKeyPressed = false;
+    
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) {
+        if (!plusKeyPressed) {
+            int currentDistance = map.getRenderDistance();
+            if (currentDistance < 10) {
+                map.setRenderDistance(currentDistance + 1);
+                std::cout << "Render distance increased to: " << map.getRenderDistance() << std::endl;
+            }
+            plusKeyPressed = true;
+        }
+    } else {
+        plusKeyPressed = false;
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) {
+        if (!minusKeyPressed) {
+            int currentDistance = map.getRenderDistance();
+            if (currentDistance > 1) {
+                map.setRenderDistance(currentDistance - 1);
+                std::cout << "Render distance decreased to: " << map.getRenderDistance() << std::endl;
+            }
+            minusKeyPressed = true;
+        }
+    } else {
+        minusKeyPressed = false;
+    }
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {

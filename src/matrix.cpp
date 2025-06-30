@@ -31,7 +31,7 @@ Matrix4& Matrix4::operator=(const Matrix4& other) {
 
 Matrix4 Matrix4::operator*(const Matrix4& other) const {
     Matrix4 result;
-    // Column-major matrix multiplication
+    
     for (int col = 0; col < 4; ++col) {
         for (int row = 0; row < 4; ++row) {
             result.data[col * 4 + row] = data[0 * 4 + row] * other.data[col * 4 + 0] +
@@ -115,7 +115,7 @@ Matrix4 Matrix4::rotation(const GLfloat &angle, const GLfloat &x, const GLfloat 
     Matrix4 result;
     GLfloat c = std::cos(angle);
     GLfloat s = std::sin(angle);
-    // Column-major order for OpenGL
+    
     result.data[0] = c + (1 - c) * x * x;
     result.data[1] = (1 - c) * x * y + s * z;
     result.data[2] = (1 - c) * x * z - s * y;

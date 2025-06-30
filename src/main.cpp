@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_pov()) return -1;
 
-    Map map(42, 0.02f, 6, 0.5f, 2.0f);
+    Map map(42, 0.02f, 6, 0.5f, 2.0f, 3);
 
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -39,23 +39,23 @@ int main(int argc, char** argv) {
     cube.scale(1.0f, 1.0f, 1.0f);
 
     float terrainSpacing = 2.0f;
-    float terrainHeightMultiplier = 50.0f;
+    float terrainHeightMultiplier = 100.0f;
 
     while (!glfwWindowShouldClose(window)) {
         auto currentFrameTime = std::chrono::high_resolution_clock::now();
         float deltaTime = std::chrono::duration<float>(currentFrameTime - lastFrameTime).count();
         lastFrameTime = currentFrameTime;
         
-        keyboardCallback(window, deltaTime);
+        keyboardCallback(window, deltaTime, map);
 
         glClearColor(0.12f, 0.65f, 0.85f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         update_camera();
 
-        std::vector<Object> terrains = map.generateTerrains(terrainSpacing, terrainHeightMultiplier, cameraPos.x - 50.0f, cameraPos.z - 50.0f);
-        for (auto& terrain : terrains) {
-            render_object(terrain);
+        std::vector<Object*> terrains = map.getVisibleTerrains(cameraPos.x, cameraPos.z, terrainSpacing, terrainHeightMultiplier);
+        for (Object* terrain : terrains) {
+            render_object(*terrain);
         }
 
         render_object(cube);

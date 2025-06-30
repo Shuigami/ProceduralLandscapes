@@ -11,8 +11,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity)
-    : seed(seed), scale(scale), octaves(octaves), persistence(persistence), lacunarity(lacunarity) {
+Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity, int renderDistance)
+    : seed(seed), scale(scale), octaves(octaves), persistence(persistence), lacunarity(lacunarity), renderDistance(renderDistance) {
+        chunkWorldSize = (chunkSize - 1) * 2.0f;
+        
         for (int i = 0; i < 10; ++i) {
             std::string texturePath = "textures/color_" + std::to_string(i) + ".png";
             std::cout << "Loading texture: " << texturePath << std::endl;
@@ -66,6 +68,10 @@ void Map::setLacunarity(float newLacunarity) {
     lacunarity = newLacunarity;
 }
 
+void Map::setRenderDistance(int distance) {
+    renderDistance = distance;
+}
+
 int Map::getSeed() const {
     return seed;
 }
@@ -84,6 +90,10 @@ float Map::getPersistence() const {
 
 float Map::getLacunarity() const {
     return lacunarity;
+}
+
+int Map::getRenderDistance() const {
+    return renderDistance;
 }
 
 float Map::fade(float t) {
@@ -183,8 +193,8 @@ std::vector<Object> Map::generateObjects(int x, int y) {
     int chunkY = chunkCoords[1];
 
     std::unordered_set<std::pair<int, int>, PairHash> requiredChunks;
-    for (int i = chunkX - nbChunks; i <= chunkX + nbChunks; ++i) {
-        for (int j = chunkY - nbChunks; j <= chunkY + nbChunks; ++j) {
+    for (int i = chunkX - renderDistance; i <= chunkX + renderDistance; ++i) {
+        for (int j = chunkY - renderDistance; j <= chunkY + renderDistance; ++j) {
             requiredChunks.insert({i, j});
         }
     }
@@ -195,8 +205,8 @@ std::vector<Object> Map::generateObjects(int x, int y) {
         int objectX = static_cast<int>(std::floor(pos[0]));
         int objectY = static_cast<int>(std::floor(pos[2]));
     
-        if (objectX > chunkX + nbChunks || objectX < chunkX - nbChunks ||
-            objectY > chunkY + nbChunks || objectY < chunkY - nbChunks) {
+        if (objectX > chunkX + renderDistance || objectX < chunkX - renderDistance ||
+            objectY > chunkY + renderDistance || objectY < chunkY - renderDistance) {
             it = objects.erase(it);
         } else {
             requiredChunks.erase({objectX, objectY});
@@ -279,36 +289,95 @@ Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX
     }
     
     Object modifiedTerrain(vertices, normals, terrain.getTexCoords());
-    
-    float avgHeight = 0.0f;
-    int heightCount = 0;
-    for (int i = 1; i < vertices.size(); i += 3) {
-        avgHeight += vertices[i];
-        heightCount++;
-    }
-    if (heightCount > 0) {
-        avgHeight /= heightCount;
-        float normalizedAvgHeight = (avgHeight / heightMultiplier) * 2.0f - 1.0f;
-        assignColorToObject(modifiedTerrain, normalizedAvgHeight);
+    float hashValue = static_cast<float>(hash(static_cast<int>(offsetX), static_cast<int>(offsetY)));
+    hashValue = std::abs(hashValue);
+    int textureIndex = static_cast<int>(hashValue) % textures.size();
+    if (!textures.empty()) {
+        modifiedTerrain.setTexture(textures[textureIndex]);
     }
     
     return modifiedTerrain;
 }
 
-std::vector<Object> Map::generateTerrains(float spacing, float heightMultiplier, float offsetX, float offsetY) {
-    std::vector<Object> terrains;
+ChunkCoord Map::worldToChunkCoord(float worldX, float worldZ) {
+    int chunkX = static_cast<int>(std::floor(worldX / chunkWorldSize));
+    int chunkZ = static_cast<int>(std::floor(worldZ / chunkWorldSize));
+    return {chunkX, chunkZ};
+}
+
+Object Map::generateTerrainChunk(ChunkCoord coord, float spacing, float heightMultiplier) {
+    float offsetX = coord.x * chunkWorldSize;
+    float offsetZ = coord.z * chunkWorldSize;
     
-    for (int i = 0; i < nbChunks; ++i) {
-        for (int j = 0; j < nbChunks; ++j) {
-            float actualChunkSpacing = (chunkSize - 1) * spacing;
-            Object terrain = generateTerrain(spacing, heightMultiplier, offsetX + i * actualChunkSpacing, offsetY + j * actualChunkSpacing);
-            int hashValue = std::hash<int>()(i) ^ (std::hash<int>()(j) << 1) ^ (seed << 2);
-            int textureIndex = std::abs(hashValue) % textures.size();
-            terrain.setTexture(textures[textureIndex]);
-            terrain.move(i * actualChunkSpacing, 0.0f, j * actualChunkSpacing);
-            terrains.push_back(terrain);
+    Object terrain = generateTerrain(spacing, heightMultiplier, offsetX + 1000.0f, offsetZ + 1000.0f);
+    terrain.move(offsetX, 0.0f, offsetZ);
+    
+    return terrain;
+}
+
+void Map::updateChunks(float cameraX, float cameraZ, float spacing, float heightMultiplier) {
+    chunkWorldSize = (chunkSize - 1) * spacing;
+    ChunkCoord cameraChunk = worldToChunkCoord(cameraX, cameraZ);
+    
+    bool cameraMovedToNewChunk = (cameraChunk.x != lastCameraChunk.x || cameraChunk.z != lastCameraChunk.z);
+    bool renderDistanceChanged = (renderDistance != lastRenderDistance);
+    
+    if (!cameraMovedToNewChunk && !renderDistanceChanged) {
+        return;
+    }
+    
+    if (renderDistanceChanged) {
+        std::cout << "Render distance changed from " << lastRenderDistance << " to " << renderDistance << std::endl;
+        lastRenderDistance = renderDistance;
+    }
+    
+    lastCameraChunk = cameraChunk;
+    
+    removeDistantChunks(cameraChunk);
+    
+    for (int x = cameraChunk.x - renderDistance; x <= cameraChunk.x + renderDistance; x++) {
+        for (int z = cameraChunk.z - renderDistance; z <= cameraChunk.z + renderDistance; z++) {
+            ChunkCoord coord = {x, z};
+            
+            if (terrainChunks.find(coord) == terrainChunks.end()) {
+                std::cout << "Generating chunk (" << x << ", " << z << ")" << std::endl;
+                terrainChunks[coord] = generateTerrainChunk(coord, spacing, heightMultiplier);
+            }
+        }
+    }
+}
+
+void Map::removeDistantChunks(ChunkCoord centerChunk) {
+    auto it = terrainChunks.begin();
+    while (it != terrainChunks.end()) {
+        ChunkCoord coord = it->first;
+        int distanceX = std::abs(coord.x - centerChunk.x);
+        int distanceZ = std::abs(coord.z - centerChunk.z);
+        
+        if (distanceX > renderDistance + 1 || distanceZ > renderDistance + 1) {
+            std::cout << "Removing chunk (" << coord.x << ", " << coord.z << ")" << std::endl;
+            it = terrainChunks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float spacing, float heightMultiplier) {
+    updateChunks(cameraX, cameraZ, spacing, heightMultiplier);
+    
+    std::vector<Object*> visibleTerrains;
+    ChunkCoord cameraChunk = worldToChunkCoord(cameraX, cameraZ);
+    
+    for (int x = cameraChunk.x - renderDistance; x <= cameraChunk.x + renderDistance; x++) {
+        for (int z = cameraChunk.z - renderDistance; z <= cameraChunk.z + renderDistance; z++) {
+            ChunkCoord coord = {x, z};
+            auto it = terrainChunks.find(coord);
+            if (it != terrainChunks.end()) {
+                visibleTerrains.push_back(&it->second);
+            }
         }
     }
     
-    return terrains;
+    return visibleTerrains;
 }

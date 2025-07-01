@@ -5,17 +5,30 @@ uniform vec3 sunDirection;
 uniform vec3 sunColor;
 uniform vec3 ambientLightIntensity;
 uniform sampler2D objectTexture;
+uniform sampler2D grassTexture;
+uniform sampler2D rockTexture;
 uniform bool useTexture;
+uniform bool useTerrainBlending;
+uniform float blendHeight;
 
 in vec3 fragNormal;
 in vec3 fragPos;
 in vec2 fragTexCoord;
+in float fragHeight;
 
 out vec3 output_color;
 
 void main() {
     vec3 materialColor;
-    if (useTexture) {
+    
+    if (useTerrainBlending) {
+        vec3 grassColor = texture(grassTexture, fragTexCoord).rgb;
+        vec3 rockColor = texture(rockTexture, fragTexCoord).rgb;
+        
+        float blendFactor = smoothstep(blendHeight - 5.0, blendHeight + 5.0, fragHeight);
+        
+        materialColor = mix(grassColor, rockColor, blendFactor);
+    } else if (useTexture) {
         materialColor = texture(objectTexture, fragTexCoord).rgb;
     } else {
         materialColor = color;

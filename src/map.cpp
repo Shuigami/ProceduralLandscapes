@@ -16,15 +16,18 @@ Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity
         chunkWorldSize = (chunkSize - 1) * 2.0f;
         
         for (int i = 0; i < 10; ++i) {
-            std::string texturePath = "textures/color_" + std::to_string(i) + ".png";
+            std::string textureName = "color_" + std::to_string(i);
+            std::string texturePath = "textures/" + textureName + ".png";
             std::cout << "Loading texture: " << texturePath << std::endl;
             GLuint textureID = Object::loadTexture(texturePath);
             if (textureID != 0) {
-                textures.push_back(textureID);
+                textures[textureName] = textureID;
             } else {
                 std::cerr << "Failed to load texture: " << texturePath << std::endl;
             }
         }
+
+        textures["grass"] = Object::loadTexture("textures/grass.png");
 }
 
 
@@ -263,27 +266,26 @@ void Map::assignColorToObject(Object& object, float value) {
     value = (value + 1.0f) * 0.5f;
     value = std::max(0.0f, std::min(1.0f, value));
     value = 1.0f - value;
-    int textureIndex = static_cast<int>(value * textures.size());
-    textureIndex = std::max(0, std::min(textureIndex, static_cast<int>(textures.size()) - 1));
-
-    if (!textures.empty()) {
-        object.setTexture(textures[textureIndex]);
+    std::string textureName = "color_" + std::to_string(static_cast<int>(value * textures.size()));
+    if (textures.find(textureName) != textures.end()) {
+        object.setTexture(textures[textureName]);
     }
 }
 
 std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float offsetY) {
     Object terrain = Object::makeTerrain(chunkSize, chunkSize, spacing);
+    float blendHeight = 19.0f;
     std::vector<Object> terrainObjects;
 
     std::vector<GLfloat> vertices = terrain.getVertices();
     std::vector<GLfloat> normals = terrain.getNormals();
+    std::vector<GLfloat> texCoords = terrain.getTexCoords();
     
     for (int i = 0; i < vertices.size(); i += 3) {
         float x = vertices[i] + offsetX;
         float z = vertices[i + 2] + offsetY;
         
         float noiseValue = getNoise(x, z);
-
         vertices[i + 1] = noiseValue;
     }
 
@@ -308,7 +310,7 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
                 normals[normalIndex + 2] = normal.z;
             }
 
-            if (rand() % 100000 < 5 && vertices[i + 1] < 20.0f) { // 5% chance to place a tree
+            if (rand() % 100000 < 5 && vertices[i + 1] < blendHeight) {
                 float treeX = vertices[i];
                 float treeY = vertices[i + 1];
                 float treeZ = vertices[i + 2];
@@ -321,38 +323,14 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
         }
     }
 
-    // // Randomly select 5 positions, check if there height is below a certain threshold and place a tree there
-    // std::vector<Object> trees;
-    // std::unordered_set<int> selectedIndices;
-    // int numTrees = 5;
-    // while (trees.size() < numTrees) {
-    //     int index = rand() % (chunkSize * chunkSize);
-    //     if (selectedIndices.find(index) == selectedIndices.end()) {
-    //         selectedIndices.insert(index);
-    //         float x = vertices[index * 3] + offsetX;
-    //         float z = vertices[index * 3 + 2] + offsetY;
-    //         float height = vertices[index * 3 + 1];
-    //         if (height < 0.5f) { // Adjust this threshold as needed
-    //             std::vector<Object> tree = Object::makeTree(x, height, z);
-    //             for (auto& t : tree) {
-    //                 terrainObjects.push_back(t);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // Select a random position and place a tree there
-    // Random 5% chance to place a tree
-
-
-    Object modifiedTerrain(vertices, normals, terrain.getTexCoords());
-    float hashValue = static_cast<float>(hash(static_cast<int>(offsetX), static_cast<int>(offsetY)));
-    hashValue = std::abs(hashValue);
-    int textureIndex = static_cast<int>(hashValue) % textures.size();
-    if (!textures.empty()) {
-        modifiedTerrain.setTexture(textures[4]);
+    if (!vertices.empty() && textures.find("grass") != textures.end() && textures.find("color_4") != textures.end()) {
+        Object blendedTerrain(vertices, normals, texCoords);
+        
+        blendedTerrain.setTerrainTextures(textures["grass"], textures["color_4"], blendHeight);
+        blendedTerrain.enableTerrainBlending(true);
+        
+        terrainObjects.push_back(blendedTerrain);
     }
-    terrainObjects.push_back(modifiedTerrain);
 
     return terrainObjects;
 }

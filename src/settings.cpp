@@ -195,8 +195,60 @@ void display(GLuint textureID) {
         
         auto useTextureUniform = glGetUniformLocation(program, "useTexture");
         glUniform1i(useTextureUniform, 1);
+        
+        auto useTerrainBlendingUniform = glGetUniformLocation(program, "useTerrainBlending");
+        glUniform1i(useTerrainBlendingUniform, 0);
     } else {
         auto useTextureUniform = glGetUniformLocation(program, "useTexture");
+        glUniform1i(useTextureUniform, 0);
+        
+        auto useTerrainBlendingUniform = glGetUniformLocation(program, "useTerrainBlending");
+        glUniform1i(useTerrainBlendingUniform, 0);
+        
+        GLfloat color[] = {1.0f, 1.0f, 1.0f};
+        auto color_loc = glGetUniformLocation(program, "color");
+        glUniform3fv(color_loc, 1, color);
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
+
+    glBindVertexArray(0);
+}
+
+void display(const Object& object) {
+    glBindVertexArray(VAO);
+    
+    auto useTerrainBlendingUniform = glGetUniformLocation(program, "useTerrainBlending");
+    auto useTextureUniform = glGetUniformLocation(program, "useTexture");
+    
+    if (object.isTerrainBlendingEnabled()) {
+        glUniform1i(useTerrainBlendingUniform, 1);
+        glUniform1i(useTextureUniform, 0);
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, object.getGrassTexture());
+        auto grassTextureUniform = glGetUniformLocation(program, "grassTexture");
+        glUniform1i(grassTextureUniform, 0);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, object.getRockTexture());
+        auto rockTextureUniform = glGetUniformLocation(program, "rockTexture");
+        glUniform1i(rockTextureUniform, 1);
+        
+        auto blendHeightUniform = glGetUniformLocation(program, "blendHeight");
+        glUniform1f(blendHeightUniform, object.getBlendHeight());
+        
+    } else if (object.getTexture() != 0) {
+        glUniform1i(useTerrainBlendingUniform, 0);
+        glUniform1i(useTextureUniform, 1);
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, object.getTexture());
+        auto textureUniform = glGetUniformLocation(program, "objectTexture");
+        glUniform1i(textureUniform, 0);
+    } else {
+        // Color mode
+        glUniform1i(useTerrainBlendingUniform, 0);
         glUniform1i(useTextureUniform, 0);
         
         GLfloat color[] = {1.0f, 1.0f, 1.0f};
@@ -211,5 +263,5 @@ void display(GLuint textureID) {
 
 void render_object(Object& object) {
     init_object(object);
-    display(object.getTexture());
+    display(object);
 }

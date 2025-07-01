@@ -13,6 +13,7 @@ bool init_object(Object& object);
 bool init_pov();
 void update_camera();
 void display(GLuint textureID = 0);
+void display(const Object& object);
 void render_object(Object& object);
 
 extern GLFWwindow *window;

@@ -513,8 +513,38 @@ void Object::setTexture(GLuint textureID) {
     this->textureID = textureID;
 }
 
+void Object::setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, float blendHeight) {
+    this->grassTextureID = grassTextureID;
+    this->rockTextureID = rockTextureID;
+    this->blendHeight = blendHeight;
+}
+
+void Object::setBlendHeight(float height) {
+    this->blendHeight = height;
+}
+
+void Object::enableTerrainBlending(bool enable) {
+    this->useTerrainBlending = enable;
+}
+
 GLuint Object::getTexture() const {
     return textureID;
+}
+
+GLuint Object::getGrassTexture() const {
+    return grassTextureID;
+}
+
+GLuint Object::getRockTexture() const {
+    return rockTextureID;
+}
+
+float Object::getBlendHeight() const {
+    return blendHeight;
+}
+
+bool Object::isTerrainBlendingEnabled() const {
+    return useTerrainBlending;
 }
 
 std::vector<GLfloat> Object::getVertices() {

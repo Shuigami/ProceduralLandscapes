@@ -38,7 +38,7 @@ class Map {
         std::chrono::high_resolution_clock::time_point lastTime;
 
         std::vector<Object> objects;
-        std::vector<GLuint> textures;
+        std::unordered_map<std::string, GLuint> textures;
 
         std::unordered_map<ChunkCoord, std::vector<Object>, ChunkCoordHash> terrainChunks;
         ChunkCoord lastCameraChunk = {INT_MAX, INT_MAX};

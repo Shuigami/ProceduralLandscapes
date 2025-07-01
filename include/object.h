@@ -25,7 +25,14 @@ public:
     static GLuint loadTexture(const std::string& filename);
 
     void setTexture(GLuint textureID);
+    void setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, float blendHeight);
+    void setBlendHeight(float height);
+    void enableTerrainBlending(bool enable);
     GLuint getTexture() const;
+    GLuint getGrassTexture() const;
+    GLuint getRockTexture() const;
+    float getBlendHeight() const;
+    bool isTerrainBlendingEnabled() const;
     std::vector<GLfloat> getVertices();
     std::vector<GLfloat> getNormals();
     std::vector<GLfloat> getTexCoords();
@@ -43,6 +50,10 @@ private:
     std::vector<GLfloat> normals;
     std::vector<GLfloat> texCoords;
     GLuint textureID = 0;
+    GLuint grassTextureID = 0;
+    GLuint rockTextureID = 0;
+    float blendHeight = 20.0f;
+    bool useTerrainBlending = false;
     GLfloat x = 0.0f;
     GLfloat y = 0.0f;
     GLfloat z = 0.0f;

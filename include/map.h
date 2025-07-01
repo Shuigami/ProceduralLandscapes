@@ -45,6 +45,12 @@ class Map {
         int lastRenderDistance = -1;
         float chunkWorldSize;
 
+        float fogNear = 70000.0f;
+        float fogFar = 100000.0f;
+        float fogColorR = 0.12f;
+        float fogColorG = 0.65f;
+        float fogColorB = 0.85f;
+
         float fade(float t);
         float lerp(float t, float a, float b);
         float grad(int hash, float x, float y);
@@ -73,6 +79,9 @@ class Map {
         void setLacunarity(float newLacunarity);
         void setRenderDistance(int distance);
         void setFunction(std::function<float(float)> func);
+        void setFogNear(float near);
+        void setFogFar(float far);
+        void setFogColor(float r, float g, float b);
         
         int getSeed() const;
         float getScale() const;
@@ -81,6 +90,11 @@ class Map {
         float getLacunarity() const;
         int getRenderDistance() const;
         std::function<float(float)> getFunction() const;
+        float getFogNear() const;
+        float getFogFar() const;
+        float getFogColorR() const;
+        float getFogColorG() const;
+        float getFogColorB() const;
         
         bool saveNoiseAsImage(const std::string& filename, int width, int height, 
                              float offsetX = 0.0f, float offsetY = 0.0f);

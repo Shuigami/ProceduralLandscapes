@@ -11,6 +11,7 @@ out vec3 fragNormal;
 out vec3 fragPos;
 out vec2 fragTexCoord;
 out float fragHeight;
+out float fogDistance;
 
 void main() {
     vec4 viewPos = model_view * vec4(position, 1.0);
@@ -21,4 +22,5 @@ void main() {
     fragPos = viewPos.xyz;
     fragTexCoord = texCoord;
     fragHeight = position.y;
+    fogDistance = length(viewPos.xyz);
 }

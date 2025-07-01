@@ -8,6 +8,7 @@
 #include "object.h"
 #include "program.h"
 #include "camera.h"
+#include "map.h"
 
 const Vector3 SUN_DIRECTION_WORLD(-0.3f, 1.0f, -0.5f);
 const Vector3 SUN_COLOR(1.0f, 0.95f, 0.8f);
@@ -22,6 +23,9 @@ GLuint VBO = 0;
 GLuint normalsVBO = 0;
 GLuint texCoordsVBO = 0;
 GLFWwindow *window;
+float z_far = 500.0f;
+int windowWidth = 1024;
+int windowHeight = 1024;
 
 bool init_glfw() {
     if (!glfwInit()) {
@@ -33,7 +37,7 @@ bool init_glfw() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(1024, 1024, "Test OpenGL - POGL", nullptr, nullptr);
+    window = glfwCreateWindow(windowWidth, windowHeight, "Test OpenGL - POGL", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -41,6 +45,15 @@ bool init_glfw() {
     }
 
     glfwMakeContextCurrent(window);
+    
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+    windowWidth = width;
+    windowHeight = height;
+    
     return true;
 }
 
@@ -135,7 +148,9 @@ bool init_pov() {
     Matrix4 model_view = Matrix4::lookAt(
         cameraPos, cameraPos + cameraFront, cameraUp
     );
-    Matrix4 projection = Matrix4::frustum(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 100000.0f);
+    
+    float aspectRatio = (float)windowWidth / (float)windowHeight;
+    Matrix4 projection = Matrix4::frustum(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, z_far);
 
     auto model_view_loc = glGetUniformLocation(program, "model_view");
     auto projection_loc = glGetUniformLocation(program, "projection");
@@ -247,7 +262,6 @@ void display(const Object& object) {
         auto textureUniform = glGetUniformLocation(program, "objectTexture");
         glUniform1i(textureUniform, 0);
     } else {
-        // Color mode
         glUniform1i(useTerrainBlendingUniform, 0);
         glUniform1i(useTextureUniform, 0);
         
@@ -264,4 +278,28 @@ void display(const Object& object) {
 void render_object(Object& object) {
     init_object(object);
     display(object);
+}
+
+void update_fog(const Map& map) {
+    GLfloat fogColor[] = {map.getFogColorR(), map.getFogColorG(), map.getFogColorB()};
+    
+    auto fogColor_loc = glGetUniformLocation(program, "fogColor");
+    auto fogNear_loc = glGetUniformLocation(program, "fogNear");
+    auto fogFar_loc = glGetUniformLocation(program, "fogFar");
+    
+    glUniform3fv(fogColor_loc, 1, fogColor);
+    glUniform1f(fogNear_loc, map.getFogNear());
+    glUniform1f(fogFar_loc, map.getFogFar());
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+    windowWidth = width;
+    windowHeight = height;
+    
+    float aspectRatio = (float)width / (float)height;
+    Matrix4 projection = Matrix4::frustum(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, z_far);
+    
+    auto projection_loc = glGetUniformLocation(program, "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection.data);
 }

@@ -315,23 +315,19 @@ Object Object::makeTerrain(int width, int height, float spacing) {
     std::vector<GLfloat> normals;
     std::vector<GLfloat> texCoords;
     
-    // Generate vertices for a grid mesh
-    // Create triangles for each quad in the grid
     for (int z = 0; z < height - 1; z++) {
         for (int x = 0; x < width - 1; x++) {
-            // Calculate the four corners of the current quad
             float x0 = x * spacing;
             float x1 = (x + 1) * spacing;
             float z0 = z * spacing;
             float z1 = (z + 1) * spacing;
             
-            // Texture coordinates for the quad corners
             float u0 = (float)x / (width - 1);
             float u1 = (float)(x + 1) / (width - 1);
             float v0 = (float)z / (height - 1);
             float v1 = (float)(z + 1) / (height - 1);
             
-            // First triangle (bottom-left, top-left, bottom-right) - CCW
+            // First triangle
             // Bottom-left
             vertices.push_back(x0);
             vertices.push_back(0.0f);
@@ -353,7 +349,7 @@ Object Object::makeTerrain(int width, int height, float spacing) {
             texCoords.push_back(u1);
             texCoords.push_back(v0);
             
-            // Second triangle (bottom-right, top-left, top-right) - CCW
+            // Second triangle
             // Bottom-right
             vertices.push_back(x1);
             vertices.push_back(0.0f);
@@ -375,7 +371,6 @@ Object Object::makeTerrain(int width, int height, float spacing) {
             texCoords.push_back(u1);
             texCoords.push_back(v1);
             
-            // Add normals (pointing up, will be recalculated later)
             for (int i = 0; i < 6; i++) {
                 normals.push_back(0.0f);
                 normals.push_back(1.0f);
@@ -402,71 +397,12 @@ std::vector<Object> Object::makeTree(float x, float y, float z) {
     return trees;
 }
 
-std::string Object::parseMTLForTexture(const std::string& mtlFilename) {
-    std::ifstream file(mtlFilename);
-    if (!file.is_open()) {
-        // Don't print error - just return empty string
-        return "";
-    }
-    
-    std::string line;
-    std::string basePath = mtlFilename.substr(0, mtlFilename.find_last_of("/\\") + 1);
-    
-    while (std::getline(file, line)) {
-        // Trim whitespace
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
-        
-        // Skip empty lines and comments
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
-        
-        std::istringstream iss(line);
-        std::string prefix;
-        iss >> prefix;
-        
-        // Look for texture map directives (in order of preference)
-        if (prefix == "map_Kd" || prefix == "map_Ka" || prefix == "map_Ks" || 
-            prefix == "map_Bump" || prefix == "map_bump" || prefix == "bump") {
-            std::string textureFile;
-            iss >> textureFile;
-            
-            if (!textureFile.empty()) {
-                // If the texture path is relative, prepend the MTL file's directory
-                if (textureFile.find("/") == std::string::npos && 
-                    textureFile.find("\\") == std::string::npos) {
-                    textureFile = basePath + textureFile;
-                }
-                
-                file.close();
-                return textureFile;
-            }
-        }
-    }
-    
-    file.close();
-    return ""; // No texture found
-}
-
 GLuint Object::loadTexture(const std::string& filename) {
-    // Check file extension to determine how to handle the file
     std::string extension = filename.substr(filename.find_last_of(".") + 1);
     std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
     
     std::string textureFilename = filename;
     
-    // If it's an MTL file, parse it to find texture references
-    if (extension == "mtl") {
-        textureFilename = parseMTLForTexture(filename);
-        if (textureFilename.empty()) {
-            // No texture found in MTL file - this is not necessarily an error
-            // Just return 0 to indicate no texture should be loaded
-            return 0;
-        }
-    }
-    
-    // Load the texture file (PNG, JPG, etc.)
     GLuint textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -588,7 +524,6 @@ void Object::rotate(const GLfloat& angle, const std::vector<GLfloat>& axis) {
         GLfloat vy = vertices[i + 1] - this->y;
         GLfloat vz = vertices[i + 2] - this->z;
 
-        // Rotate around the specified axis
         vertices[i] = (c + (1 - c) * x * x) * vx + ((1 - c) * x * y - s * z) * vy + ((1 - c) * x * z + s * y) * vz + this->x;
         vertices[i + 1] = ((1 - c) * y * x + s * z) * vx + (c + (1 - c) * y * y) * vy + ((1 - c) * y * z - s * x) * vz + this->y;
         vertices[i + 2] = ((1 - c) * z * x - s * y) * vx + ((1 - c) * z * y + s * x) * vy + (c + (1 - c) * z * z) * vz + this->z;
@@ -628,11 +563,9 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
     
     std::string line;
     while (std::getline(file, line)) {
-        // Trim whitespace
         line.erase(0, line.find_first_not_of(" \t\r\n"));
         line.erase(line.find_last_not_of(" \t\r\n") + 1);
         
-        // Skip empty lines and comments
         if (line.empty() || line[0] == '#') {
             continue;
         }
@@ -642,14 +575,11 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
         iss >> prefix;
         
         if (prefix == "mtllib") {
-            // Material library reference
             iss >> mtlFile;
-            // Prepend the OBJ file's directory to the MTL file path
             std::string basePath = filename.substr(0, filename.find_last_of("/\\") + 1);
             mtlFile = basePath + mtlFile;
         }
         else if (prefix == "v") {
-            // Vertex position
             GLfloat x, y, z;
             iss >> x >> y >> z;
             temp_vertices.push_back(x);
@@ -657,7 +587,6 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
             temp_vertices.push_back(z);
         }
         else if (prefix == "vn") {
-            // Vertex normal
             GLfloat x, y, z;
             iss >> x >> y >> z;
             temp_normals.push_back(x);
@@ -665,32 +594,27 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
             temp_normals.push_back(z);
         }
         else if (prefix == "vt") {
-            // Texture coordinate
             GLfloat u, v;
             iss >> u >> v;
             temp_texCoords.push_back(u);
             temp_texCoords.push_back(v);
         }
         else if (prefix == "f") {
-            // Face definition - handle triangles and quads
             std::vector<std::string> faceVertices;
             std::string vertex;
             
-            // Read all vertices in the face
             while (iss >> vertex) {
                 faceVertices.push_back(vertex);
             }
             
-            // Skip if not enough vertices for a triangle
             if (faceVertices.size() < 3) {
                 continue;
             }
             
-            // Parse each vertex (format: v/vt/vn or v//vn or v/vt or v)
             auto parseVertex = [&](const std::string& vertexStr) {
                 std::istringstream viss(vertexStr);
                 std::string part;
-                std::vector<int> indices(3, 0); // Initialize with 3 zeros
+                std::vector<int> indices(3, 0);
                 int index = 0;
                 
                 while (std::getline(viss, part, '/') && index < 3) {
@@ -707,47 +631,39 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
                 return indices;
             };
             
-            // Triangulate the face (for quads and higher)
             for (size_t i = 1; i < faceVertices.size() - 1; i++) {
                 auto v1_indices = parseVertex(faceVertices[0]);
                 auto v2_indices = parseVertex(faceVertices[i]);
                 auto v3_indices = parseVertex(faceVertices[i + 1]);
                 
-                // Add vertices (OBJ indices are 1-based, convert to 0-based)
                 for (auto indices : {v1_indices, v2_indices, v3_indices}) {
                     int v_idx = indices[0] - 1;
                     int vt_idx = indices[1] - 1;
                     int vn_idx = indices[2] - 1;
                     
-                    // Add vertex position
                     if (v_idx >= 0 && (size_t)v_idx < temp_vertices.size() / 3) {
                         final_vertices.push_back(temp_vertices[v_idx * 3]);
                         final_vertices.push_back(temp_vertices[v_idx * 3 + 1]);
                         final_vertices.push_back(temp_vertices[v_idx * 3 + 2]);
                     } else {
-                        // Invalid vertex index - use default
                         final_vertices.push_back(0.0f);
                         final_vertices.push_back(0.0f);
                         final_vertices.push_back(0.0f);
                     }
                     
-                    // Add texture coordinate
                     if (vt_idx >= 0 && (size_t)vt_idx < temp_texCoords.size() / 2) {
                         final_texCoords.push_back(temp_texCoords[vt_idx * 2]);
                         final_texCoords.push_back(temp_texCoords[vt_idx * 2 + 1]);
                     } else {
-                        // Default texture coordinates if not provided
                         final_texCoords.push_back(0.0f);
                         final_texCoords.push_back(0.0f);
                     }
                     
-                    // Add vertex normal
                     if (vn_idx >= 0 && (size_t)vn_idx < temp_normals.size() / 3) {
                         final_normals.push_back(temp_normals[vn_idx * 3]);
                         final_normals.push_back(temp_normals[vn_idx * 3 + 1]);
                         final_normals.push_back(temp_normals[vn_idx * 3 + 2]);
                     } else {
-                        // Default normal if not provided (pointing up)
                         final_normals.push_back(0.0f);
                         final_normals.push_back(1.0f);
                         final_normals.push_back(0.0f);
@@ -761,19 +677,15 @@ Object Object::loadFromObj(const std::string& filename, const std::string& textu
     
     Object obj(final_vertices, final_normals, final_texCoords);
     
-    // Try to load texture from provided textureFile parameter first
     if (!textureFile.empty()) {
         GLuint textureID = loadTexture(textureFile);
         if (textureID != 0) {
             obj.setTexture(textureID);
         }
     }
-    // If no texture was loaded and we found an MTL file, try to load texture from it
     else if (!mtlFile.empty() && obj.getTexture() == 0) {
-        // Check if MTL file exists, if not, try in textures directory
         std::ifstream mtlCheck(mtlFile);
         if (!mtlCheck.is_open()) {
-            // Try in textures directory
             std::string mtlBasename = mtlFile.substr(mtlFile.find_last_of("/\\") + 1);
             std::string alternativeMtlPath = "textures/" + mtlBasename;
             mtlFile = alternativeMtlPath;

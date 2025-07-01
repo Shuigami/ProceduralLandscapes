@@ -21,8 +21,12 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_pov()) return -1;
 
-    Map map(42, 0.005f, 6, 0.4f, 2.0f, 6);
+    Map map(42, 0.005f, 6, 0.4f, 2.0f, 7);
     map.setFunction([](float x) { return std::pow(x, 6) * 2000.0f; });
+    
+    map.setFogNear(0.7f * z_far);
+    map.setFogFar(z_far);
+    map.setFogColor(0.12f, 0.65f, 0.85f);
 
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -52,6 +56,7 @@ int main(int argc, char** argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         update_camera();
+        update_fog(map);
 
         std::vector<Object*> terrains = map.getVisibleTerrains(cameraPos.x, cameraPos.z, terrainSpacing);
         for (Object* terrain : terrains) {

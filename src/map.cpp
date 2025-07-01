@@ -421,3 +421,37 @@ std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float
     
     return visibleTerrains;
 }
+
+void Map::setFogNear(float near) {
+    fogNear = near;
+}
+
+void Map::setFogFar(float far) {
+    fogFar = far;
+}
+
+void Map::setFogColor(float r, float g, float b) {
+    fogColorR = r;
+    fogColorG = g;
+    fogColorB = b;
+}
+
+float Map::getFogNear() const {
+    return fogNear;
+}
+
+float Map::getFogFar() const {
+    return fogFar;
+}
+
+float Map::getFogColorR() const {
+    return fogColorR;
+}
+
+float Map::getFogColorG() const {
+    return fogColorG;
+}
+
+float Map::getFogColorB() const {
+    return fogColorB;
+}

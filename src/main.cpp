@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_pov()) return -1;
 
-    Map map(42, 0.02f, 6, 0.5f, 2.0f, 3);
+    Map map(42, 0.003f, 6, 0.5f, 2.0f, 3);
 
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     cube.scale(1.0f, 1.0f, 1.0f);
 
     float terrainSpacing = 2.0f;
-    float terrainHeightMultiplier = 100.0f;
+    float terrainHeightMultiplier = 1.0f;
 
     while (!glfwWindowShouldClose(window)) {
         auto currentFrameTime = std::chrono::high_resolution_clock::now();

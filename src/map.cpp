@@ -33,19 +33,25 @@ float Map::getValue(float x, float y) {
 }
 
 float Map::getOctaveNoise(float x, float y) {
-    float value = 0.0f;
+    float result = 0.0f;
+    float frequency = 1.0f;
     float amplitude = 1.0f;
-    float frequency = scale;
-    float maxValue = 0.0f;
-    
-    for (int i = 0; i < octaves; i++) {
-        value += perlinNoise(x * frequency, y * frequency) * amplitude;
-        maxValue += amplitude;
+    float maxAmplitude = 0.0f;
+
+    for (int i = 0; i < octaves; ++i) {
+        result += perlinNoise(x * frequency * scale, y * frequency * scale) * amplitude;
+        maxAmplitude += amplitude;
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    
-    return value / maxValue;
+
+    if (maxAmplitude == 0.0f) {
+        return 0.0f;
+    }
+
+    result /= maxAmplitude;
+
+    return result;
 }
 
 void Map::setSeed(int newSeed) {
@@ -261,8 +267,10 @@ Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX
         
         float normalizedHeight = (noiseValue + 1.0f) * 0.5f;
         normalizedHeight = std::max(0.0f, std::min(1.0f, normalizedHeight));
+
+        normalizedHeight = std::pow(normalizedHeight, 6.0f) * 2000.0f;
         
-        vertices[i + 1] = normalizedHeight * heightMultiplier;
+        vertices[i + 1] = normalizedHeight;
     }
     
     for (int i = 0; i < vertices.size(); i += 9) {

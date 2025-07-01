@@ -21,7 +21,8 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_pov()) return -1;
 
-    Map map(42, 0.003f, 6, 0.5f, 2.0f, 3);
+    Map map(42, 0.005f, 6, 0.4f, 2.0f, 6);
+    map.setFunction([](float x) { return std::pow(x, 6) * 2000.0f; });
 
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -39,7 +40,6 @@ int main(int argc, char** argv) {
     cube.scale(1.0f, 1.0f, 1.0f);
 
     float terrainSpacing = 2.0f;
-    float terrainHeightMultiplier = 1.0f;
 
     while (!glfwWindowShouldClose(window)) {
         auto currentFrameTime = std::chrono::high_resolution_clock::now();
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
         update_camera();
 
-        std::vector<Object*> terrains = map.getVisibleTerrains(cameraPos.x, cameraPos.z, terrainSpacing, terrainHeightMultiplier);
+        std::vector<Object*> terrains = map.getVisibleTerrains(cameraPos.x, cameraPos.z, terrainSpacing);
         for (Object* terrain : terrains) {
             render_object(*terrain);
         }

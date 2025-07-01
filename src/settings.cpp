@@ -135,7 +135,7 @@ bool init_pov() {
     Matrix4 model_view = Matrix4::lookAt(
         cameraPos, cameraPos + cameraFront, cameraUp
     );
-    Matrix4 projection = Matrix4::frustum(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1000.0f);
+    Matrix4 projection = Matrix4::frustum(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 100000.0f);
 
     auto model_view_loc = glGetUniformLocation(program, "model_view");
     auto projection_loc = glGetUniformLocation(program, "projection");

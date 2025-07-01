@@ -20,6 +20,7 @@ public:
     static Object makeCube();
     static Object makeCylinder();
     static Object makeTerrain(int width, int height, float spacing = 1.0f);
+    static std::vector<Object> makeTree(float x, float y, float z);
 
     static GLuint loadTexture(const std::string& filename);
 
@@ -33,7 +34,11 @@ public:
     void move(const GLfloat& x, const GLfloat& y, const GLfloat& z);
     void rotate(const GLfloat& angle, const std::vector<GLfloat>& axis);
     void scale(const GLfloat& x, const GLfloat& y, const GLfloat& z);
+
+    static Object loadFromObj(const std::string& filename, const std::string& mtlFilename = "");
 private:
+    static std::string parseMTLForTexture(const std::string& mtlFilename);
+    
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;
     std::vector<GLfloat> texCoords;

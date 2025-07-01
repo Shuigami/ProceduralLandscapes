@@ -5,6 +5,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <climits>
+#include <functional>
 
 #include "object.h"
 
@@ -25,19 +26,21 @@ struct ChunkCoordHash {
 class Map {
     private:
         int renderDistance = 3;
-        int chunkSize = 64;
+        int chunkSize = 32;
         int seed;
         float scale;
         int octaves;
         float persistence;
         float lacunarity;
 
+        std::function<float(float)> function = [](float x) { return x; };
+
         std::chrono::high_resolution_clock::time_point lastTime;
 
         std::vector<Object> objects;
         std::vector<GLuint> textures;
-        
-        std::unordered_map<ChunkCoord, Object, ChunkCoordHash> terrainChunks;
+
+        std::unordered_map<ChunkCoord, std::vector<Object>, ChunkCoordHash> terrainChunks;
         ChunkCoord lastCameraChunk = {INT_MAX, INT_MAX};
         int lastRenderDistance = -1;
         float chunkWorldSize;
@@ -50,8 +53,8 @@ class Map {
         int hash(int x, int y);
         
         ChunkCoord worldToChunkCoord(float worldX, float worldZ);
-        Object generateTerrainChunk(ChunkCoord coord, float spacing, float heightMultiplier);
-        void updateChunks(float cameraX, float cameraZ, float spacing, float heightMultiplier);
+        std::vector<Object> generateTerrainChunk(ChunkCoord coord, float spacing);
+        void updateChunks(float cameraX, float cameraZ, float spacing);
         void removeDistantChunks(ChunkCoord centerChunk);
         
     public:
@@ -61,6 +64,7 @@ class Map {
         float getValue(float x, float y);
         
         float getOctaveNoise(float x, float y);
+        float getNoise(float x, float y);
         
         void setSeed(int newSeed);
         void setScale(float newScale);
@@ -68,6 +72,7 @@ class Map {
         void setPersistence(float newPersistence);
         void setLacunarity(float newLacunarity);
         void setRenderDistance(int distance);
+        void setFunction(std::function<float(float)> func);
         
         int getSeed() const;
         float getScale() const;
@@ -75,6 +80,7 @@ class Map {
         float getPersistence() const;
         float getLacunarity() const;
         int getRenderDistance() const;
+        std::function<float(float)> getFunction() const;
         
         bool saveNoiseAsImage(const std::string& filename, int width, int height, 
                              float offsetX = 0.0f, float offsetY = 0.0f);
@@ -83,10 +89,9 @@ class Map {
         std::vector<Object> generateObjects(int x, int y);
         
         std::vector<Object*> getVisibleTerrains(float cameraX, float cameraZ, 
-                                               float spacing = 1.0f, float heightMultiplier = 10.0f);
-        
-        Object generateTerrain(float spacing = 1.0f, 
-                              float heightMultiplier = 10.0f, 
+                                               float spacing = 1.0f);
+
+        std::vector<Object> generateTerrain(float spacing = 1.0f, 
                               float offsetX = 0.0f, float offsetY = 0.0f);
         void assignColorToObject(Object& object, float value);
 };

@@ -54,6 +54,16 @@ float Map::getOctaveNoise(float x, float y) {
     return result;
 }
 
+float Map::getNoise(float x, float y) {
+    float noiseValue = getOctaveNoise(x, y);
+    float normalizedHeight = (noiseValue + 1.0f) * 0.5f;
+    normalizedHeight = std::max(0.0f, std::min(1.0f, normalizedHeight));
+
+    normalizedHeight = function(normalizedHeight);
+
+    return normalizedHeight;
+}
+
 void Map::setSeed(int newSeed) {
     seed = newSeed;
 }
@@ -78,6 +88,10 @@ void Map::setRenderDistance(int distance) {
     renderDistance = distance;
 }
 
+void Map::setFunction(std::function<float(float)> func) {
+    function = func;
+}
+
 int Map::getSeed() const {
     return seed;
 }
@@ -100,6 +114,10 @@ float Map::getLacunarity() const {
 
 int Map::getRenderDistance() const {
     return renderDistance;
+}
+
+std::function<float(float)> Map::getFunction() const {
+    return function;
 }
 
 float Map::fade(float t) {
@@ -253,8 +271,9 @@ void Map::assignColorToObject(Object& object, float value) {
     }
 }
 
-Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX, float offsetY) {
+std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float offsetY) {
     Object terrain = Object::makeTerrain(chunkSize, chunkSize, spacing);
+    std::vector<Object> terrainObjects;
 
     std::vector<GLfloat> vertices = terrain.getVertices();
     std::vector<GLfloat> normals = terrain.getNormals();
@@ -263,16 +282,11 @@ Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX
         float x = vertices[i] + offsetX;
         float z = vertices[i + 2] + offsetY;
         
-        float noiseValue = getOctaveNoise(x, z);
-        
-        float normalizedHeight = (noiseValue + 1.0f) * 0.5f;
-        normalizedHeight = std::max(0.0f, std::min(1.0f, normalizedHeight));
+        float noiseValue = getNoise(x, z);
 
-        normalizedHeight = std::pow(normalizedHeight, 6.0f) * 2000.0f;
-        
-        vertices[i + 1] = normalizedHeight;
+        vertices[i + 1] = noiseValue;
     }
-    
+
     for (int i = 0; i < vertices.size(); i += 9) {
         if (i + 8 < vertices.size()) {
             glm::vec3 v1(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -293,18 +307,54 @@ Object Map::generateTerrain(float spacing, float heightMultiplier, float offsetX
                 normals[normalIndex + 1] = normal.y;
                 normals[normalIndex + 2] = normal.z;
             }
+
+            if (rand() % 100000 < 5 && vertices[i + 1] < 20.0f) { // 5% chance to place a tree
+                float treeX = vertices[i];
+                float treeY = vertices[i + 1];
+                float treeZ = vertices[i + 2];
+                
+                std::vector<Object> tree = Object::makeTree(treeX, treeY, treeZ);
+                for (auto& t : tree) {
+                    terrainObjects.push_back(t);
+                }
+            }
         }
     }
-    
+
+    // // Randomly select 5 positions, check if there height is below a certain threshold and place a tree there
+    // std::vector<Object> trees;
+    // std::unordered_set<int> selectedIndices;
+    // int numTrees = 5;
+    // while (trees.size() < numTrees) {
+    //     int index = rand() % (chunkSize * chunkSize);
+    //     if (selectedIndices.find(index) == selectedIndices.end()) {
+    //         selectedIndices.insert(index);
+    //         float x = vertices[index * 3] + offsetX;
+    //         float z = vertices[index * 3 + 2] + offsetY;
+    //         float height = vertices[index * 3 + 1];
+    //         if (height < 0.5f) { // Adjust this threshold as needed
+    //             std::vector<Object> tree = Object::makeTree(x, height, z);
+    //             for (auto& t : tree) {
+    //                 terrainObjects.push_back(t);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // Select a random position and place a tree there
+    // Random 5% chance to place a tree
+
+
     Object modifiedTerrain(vertices, normals, terrain.getTexCoords());
     float hashValue = static_cast<float>(hash(static_cast<int>(offsetX), static_cast<int>(offsetY)));
     hashValue = std::abs(hashValue);
     int textureIndex = static_cast<int>(hashValue) % textures.size();
     if (!textures.empty()) {
-        modifiedTerrain.setTexture(textures[textureIndex]);
+        modifiedTerrain.setTexture(textures[4]);
     }
-    
-    return modifiedTerrain;
+    terrainObjects.push_back(modifiedTerrain);
+
+    return terrainObjects;
 }
 
 ChunkCoord Map::worldToChunkCoord(float worldX, float worldZ) {
@@ -313,17 +363,19 @@ ChunkCoord Map::worldToChunkCoord(float worldX, float worldZ) {
     return {chunkX, chunkZ};
 }
 
-Object Map::generateTerrainChunk(ChunkCoord coord, float spacing, float heightMultiplier) {
+std::vector<Object> Map::generateTerrainChunk(ChunkCoord coord, float spacing) {
     float offsetX = coord.x * chunkWorldSize;
     float offsetZ = coord.z * chunkWorldSize;
-    
-    Object terrain = generateTerrain(spacing, heightMultiplier, offsetX + 1000.0f, offsetZ + 1000.0f);
-    terrain.move(offsetX, 0.0f, offsetZ);
-    
+
+    std::vector<Object> terrain = generateTerrain(spacing, offsetX + 1000.0f, offsetZ + 1000.0f);
+    for (auto& object : terrain) {
+        object.move(offsetX, 0.0f, offsetZ);
+    }
+
     return terrain;
 }
 
-void Map::updateChunks(float cameraX, float cameraZ, float spacing, float heightMultiplier) {
+void Map::updateChunks(float cameraX, float cameraZ, float spacing) {
     chunkWorldSize = (chunkSize - 1) * spacing;
     ChunkCoord cameraChunk = worldToChunkCoord(cameraX, cameraZ);
     
@@ -349,7 +401,7 @@ void Map::updateChunks(float cameraX, float cameraZ, float spacing, float height
             
             if (terrainChunks.find(coord) == terrainChunks.end()) {
                 std::cout << "Generating chunk (" << x << ", " << z << ")" << std::endl;
-                terrainChunks[coord] = generateTerrainChunk(coord, spacing, heightMultiplier);
+                terrainChunks[coord] = generateTerrainChunk(coord, spacing);
             }
         }
     }
@@ -371,8 +423,8 @@ void Map::removeDistantChunks(ChunkCoord centerChunk) {
     }
 }
 
-std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float spacing, float heightMultiplier) {
-    updateChunks(cameraX, cameraZ, spacing, heightMultiplier);
+std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float spacing) {
+    updateChunks(cameraX, cameraZ, spacing);
     
     std::vector<Object*> visibleTerrains;
     ChunkCoord cameraChunk = worldToChunkCoord(cameraX, cameraZ);
@@ -382,7 +434,9 @@ std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float
             ChunkCoord coord = {x, z};
             auto it = terrainChunks.find(coord);
             if (it != terrainChunks.end()) {
-                visibleTerrains.push_back(&it->second);
+                for (auto& object : it->second) {
+                    visibleTerrains.push_back(&object);
+                }
             }
         }
     }

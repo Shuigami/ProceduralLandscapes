@@ -28,7 +28,7 @@ Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity
         }
 
         textures["grass"] = Object::loadTexture("textures/grass.png");
-        textures["snow"] = Object::loadTexture("textures/snow.jpg");
+        textures["snow"] = Object::loadTexture("textures/white.png");
         textures["cloud"] = Object::loadTexture("textures/white.png");
 }
 
@@ -326,13 +326,11 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
                 }
             }
 
-            if (rand() % 50000 < 3) { // Increased cloud generation probability
-                // Generate clouds at a higher altitude
+            if (rand() % 50000 < 3) {
                 float cloudX = vertices[i];
-                float cloudY = 200.0f + static_cast<float>(rand() % 40); // High altitude with more variation
+                float cloudY = 200.0f + static_cast<float>(rand() % 40);
                 float cloudZ = vertices[i + 2];
                 
-                // Random cloud size (larger clouds)
                 float cloudSize = 5.0f + static_cast<float>(rand() % 4);
 
                 Object cloud = Object::makeCloud(cloudX, cloudY, cloudZ, cloudSize);
@@ -455,24 +453,21 @@ std::pair<std::vector<Object*>, std::vector<Object*>> Map::separateOpaqueAndTran
     
     for (Object* obj : objects) {
         if (obj->getAlpha() < 1.0f) {
-            // Calculate distance from camera for back-to-front sorting
             auto pos = obj->getPosition();
             float dx = pos[0] - cameraX;
             float dz = pos[2] - cameraZ;
-            float distance = dx * dx + dz * dz; // Square distance is sufficient for sorting
+            float distance = dx * dx + dz * dz;
             transparentWithDistance.push_back({obj, distance});
         } else {
             opaqueObjects.push_back(obj);
         }
     }
     
-    // Sort transparent objects back-to-front (farthest first)
     std::sort(transparentWithDistance.begin(), transparentWithDistance.end(),
               [](const std::pair<Object*, float>& a, const std::pair<Object*, float>& b) {
-                  return a.second > b.second; // Greater distance first (back-to-front)
+                  return a.second > b.second;
               });
     
-    // Extract sorted transparent objects
     std::vector<Object*> transparentObjects;
     for (const auto& pair : transparentWithDistance) {
         transparentObjects.push_back(pair.first);

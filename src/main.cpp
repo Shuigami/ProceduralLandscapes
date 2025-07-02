@@ -60,17 +60,14 @@ int main(int argc, char** argv) {
 
         std::vector<Object*> terrains = map.getVisibleTerrains(cameraPos.x, cameraPos.z, terrainSpacing);
         
-        // Separate opaque and transparent objects for proper rendering
         auto [opaqueObjects, transparentObjects] = map.separateOpaqueAndTransparent(terrains, cameraPos.x, cameraPos.z);
         
-        // Render opaque objects first (with depth writing enabled)
         for (Object* terrain : opaqueObjects) {
             render_object(*terrain);
         }
 
         render_object(cube);
         
-        // Render transparent objects last (back-to-front order, depth writing disabled)
         for (Object* transparentObj : transparentObjects) {
             render_object(*transparentObj);
         }

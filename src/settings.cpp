@@ -72,7 +72,6 @@ bool init_gl() {
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     
-    // Enable blending for transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -229,7 +228,6 @@ void display(GLuint textureID) {
         glUniform3fv(color_loc, 1, color);
     }
     
-    // Set default alpha for this version (fully opaque)
     auto alphaUniform = glGetUniformLocation(program, "objectAlpha");
     glUniform1f(alphaUniform, 1.0f);
 
@@ -286,7 +284,6 @@ void display(const Object& object) {
         glUniform3fv(color_loc, 1, color);
     }
     
-    // Set alpha uniform for transparency support
     auto alphaUniform = glGetUniformLocation(program, "objectAlpha");
     glUniform1f(alphaUniform, object.getAlpha());
 
@@ -296,20 +293,15 @@ void display(const Object& object) {
 }
 
 void render_object(Object& object) {
-    // Handle transparent objects specially
     if (object.getAlpha() < 1.0f) {
-        // For transparent objects: keep depth testing but disable depth writing
-        glDepthMask(GL_FALSE); // Disable depth writing for transparent objects
-        // Depth testing remains enabled so transparent objects still respect depth
+        glDepthMask(GL_FALSE);
     } else {
-        // For opaque objects: normal depth testing and writing
-        glDepthMask(GL_TRUE); // Ensure depth writing is enabled for opaque objects
+        glDepthMask(GL_TRUE);
     }
     
     init_object(object);
     display(object);
     
-    // Always restore depth writing after rendering
     glDepthMask(GL_TRUE);
 }
 

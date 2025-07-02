@@ -27,7 +27,6 @@ in float fogDistance;
 
 out vec4 output_color;
 
-// Simple noise function for varying snow line
 float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
@@ -71,12 +70,9 @@ void main() {
     
     vec3 finalColor;
     
-    // Skip lighting calculations for transparent objects (clouds)
     if (objectAlpha < 1.0) {
-        // For transparent objects, use bright material color without lighting
         finalColor = materialColor;
     } else {
-        // For opaque objects, apply full lighting
         vec3 ambient = ambientLightIntensity * materialColor * 0.2;
 
         vec3 norm = normalize(fragNormal);

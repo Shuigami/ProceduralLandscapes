@@ -39,7 +39,6 @@ public:
     float getSnowBlendHeight() const;
     bool isTerrainBlendingEnabled() const;
     
-    // Alpha transparency support
     void setAlpha(float alpha);
     float getAlpha() const;
     
@@ -69,5 +68,5 @@ private:
     GLfloat x = 0.0f;
     GLfloat y = 0.0f;
     GLfloat z = 0.0f;
-    float alpha = 1.0f;  // Default to fully opaque
+    float alpha = 1.0f;
 };

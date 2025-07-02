@@ -398,64 +398,52 @@ std::vector<Object> Object::makeTree(float x, float y, float z) {
 }
 
 Object Object::makeCloud(float x, float y, float z, float size) {
-    // Create a Minecraft-style cloud using multiple cubes
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;
     std::vector<GLfloat> texCoords;
     
-    // Fixed cloud dimensions for more consistent appearance
     int cloudWidth = 6 + static_cast<int>(size);
     int cloudHeight = 2 + static_cast<int>(size * 0.5f);
     int cloudDepth = 4 + static_cast<int>(size * 0.8f);
     
-    // Use position-based seed for consistent cloud shapes
     int seed = static_cast<int>(x * 1234 + z * 5678) % 1000;
     
-    // Simple noise function for more natural cloud distribution
     auto noise = [seed](int x, int y, int z) -> float {
         int n = x + y * 57 + z * 997 + seed;
         n = (n << 13) ^ n;
         return ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / float(0x7fffffff);
     };
     
-    // Cloud generation with simpler, more predictable pattern
     for (int cx = 0; cx < cloudWidth; cx++) {
         for (int cy = 0; cy < cloudHeight; cy++) {
             for (int cz = 0; cz < cloudDepth; cz++) {
                 float centerX = cloudWidth * 0.5f;
                 float centerZ = cloudDepth * 0.5f;
                 
-                // Distance from center (horizontal only for cloud-like shape)
                 float distX = abs(cx - centerX) / centerX;
                 float distZ = abs(cz - centerZ) / centerZ;
                 float horizontalDist = std::max(distX, distZ);
                 
-                // Base probability based on distance from center
                 float probability = 1.0f - horizontalDist;
                 probability = std::max(0.0f, probability);
                 
-                // Make bottom layer more solid
                 if (cy == 0) {
                     probability *= 1.8f;
                 } else if (cy == cloudHeight - 1) {
-                    probability *= 0.7f; // Top layer more sparse
+                    probability *= 0.7f;
                 }
                 
-                // Add some noise for natural variation
                 float noiseValue = noise(cx, cy, cz);
                 probability *= (0.7f + 0.6f * noiseValue);
                 
-                // Create holes and variations
                 if (noiseValue < 0.3f) probability *= 0.5f;
                 
-                // Generate cube if probability check passes
                 if (probability > 0.6f) {
                     float cubeSize = size * 0.8f;
                     float cubeX = (cx - centerX) * cubeSize * 1.2f;
                     float cubeY = cy * cubeSize * 0.8f;
                     float cubeZ = (cz - centerZ) * cubeSize * 1.2f;
                     
-                    // Create cube vertices
                     std::vector<GLfloat> cubeVertices = {
                         // Front face
                         cubeX - cubeSize, cubeY - cubeSize, cubeZ + cubeSize,
@@ -508,32 +496,30 @@ Object Object::makeCloud(float x, float y, float z, float size) {
                     
                     vertices.insert(vertices.end(), cubeVertices.begin(), cubeVertices.end());
                     
-                    // Add normals for each face
                     std::vector<GLfloat> cubeNormals = {
-                        // Front (6 vertices)
+                        // Front
                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-                        // Back (6 vertices)
+                        // Back
                         0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f,
                         0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f,
-                        // Left (6 vertices)
+                        // Left
                         -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
                         -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-                        // Right (6 vertices)
+                        // Right
                         1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                         1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                        // Top (6 vertices)
+                        // Top
                         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
                         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                        // Bottom (6 vertices)
+                        // Bottom
                         0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f,
                         0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f
                     };
                     normals.insert(normals.end(), cubeNormals.begin(), cubeNormals.end());
                     
-                    // Add texture coordinates for each face
                     std::vector<GLfloat> cubeTexCoords = {
-                        // Front face (2 triangles = 6 vertices)
+                        // Front face
                         0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
                         // Back face
                         1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,

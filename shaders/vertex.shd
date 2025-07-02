@@ -9,6 +9,7 @@ uniform mat4 projection;
 
 out vec3 fragNormal;
 out vec3 fragPos;
+out vec3 worldPos;
 out vec2 fragTexCoord;
 out float fragHeight;
 out float fogDistance;
@@ -20,6 +21,7 @@ void main() {
     
     fragNormal = normalize(normalMatrix * normal);
     fragPos = viewPos.xyz;
+    worldPos = position;
     fragTexCoord = texCoord;
     fragHeight = position.y;
     fogDistance = length(viewPos.xyz);

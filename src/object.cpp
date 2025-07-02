@@ -455,8 +455,20 @@ void Object::setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, flo
     this->blendHeight = blendHeight;
 }
 
+void Object::setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, GLuint snowTextureID, float rockBlendHeight, float snowBlendHeight) {
+    this->grassTextureID = grassTextureID;
+    this->rockTextureID = rockTextureID;
+    this->snowTextureID = snowTextureID;
+    this->blendHeight = rockBlendHeight;
+    this->snowBlendHeight = snowBlendHeight;
+}
+
 void Object::setBlendHeight(float height) {
     this->blendHeight = height;
+}
+
+void Object::setSnowBlendHeight(float height) {
+    this->snowBlendHeight = height;
 }
 
 void Object::enableTerrainBlending(bool enable) {
@@ -475,8 +487,16 @@ GLuint Object::getRockTexture() const {
     return rockTextureID;
 }
 
+GLuint Object::getSnowTexture() const {
+    return snowTextureID;
+}
+
 float Object::getBlendHeight() const {
     return blendHeight;
+}
+
+float Object::getSnowBlendHeight() const {
+    return snowBlendHeight;
 }
 
 bool Object::isTerrainBlendingEnabled() const {

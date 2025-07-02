@@ -28,6 +28,7 @@ Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity
         }
 
         textures["grass"] = Object::loadTexture("textures/grass.png");
+        textures["snow"] = Object::loadTexture("textures/snow.jpg");
 }
 
 
@@ -275,6 +276,7 @@ void Map::assignColorToObject(Object& object, float value) {
 std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float offsetY) {
     Object terrain = Object::makeTerrain(chunkSize, chunkSize, spacing);
     float blendHeight = 19.0f;
+    float snowBlendHeight = 150.0f;
     std::vector<Object> terrainObjects;
 
     std::vector<GLfloat> vertices = terrain.getVertices();
@@ -316,19 +318,23 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
                 float treeZ = vertices[i + 2];
                 
                 std::vector<Object> tree = Object::makeTree(treeX, treeY, treeZ);
+                float rotateFactor = static_cast<float>(rand() % 360);
                 for (auto& t : tree) {
+                    t.rotate(rotateFactor, {0.0f, 1.0f, 0.0f});
                     terrainObjects.push_back(t);
                 }
             }
         }
     }
 
-    if (!vertices.empty() && textures.find("grass") != textures.end() && textures.find("color_4") != textures.end()) {
+    if (!vertices.empty()
+        && textures.find("grass") != textures.end()
+        && textures.find("color_4") != textures.end()
+        && textures.find("snow") != textures.end()) {
         Object blendedTerrain(vertices, normals, texCoords);
         
-        blendedTerrain.setTerrainTextures(textures["grass"], textures["color_4"], blendHeight);
+        blendedTerrain.setTerrainTextures(textures["grass"], textures["color_4"], textures["snow"], blendHeight, snowBlendHeight);
         blendedTerrain.enableTerrainBlending(true);
-        
         terrainObjects.push_back(blendedTerrain);
     }
 

@@ -250,8 +250,16 @@ void display(const Object& object) {
         auto rockTextureUniform = glGetUniformLocation(program, "rockTexture");
         glUniform1i(rockTextureUniform, 1);
         
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, object.getSnowTexture());
+        auto snowTextureUniform = glGetUniformLocation(program, "snowTexture");
+        glUniform1i(snowTextureUniform, 2);
+        
         auto blendHeightUniform = glGetUniformLocation(program, "blendHeight");
         glUniform1f(blendHeightUniform, object.getBlendHeight());
+        
+        auto snowBlendHeightUniform = glGetUniformLocation(program, "snowBlendHeight");
+        glUniform1f(snowBlendHeightUniform, object.getSnowBlendHeight());
         
     } else if (object.getTexture() != 0) {
         glUniform1i(useTerrainBlendingUniform, 0);

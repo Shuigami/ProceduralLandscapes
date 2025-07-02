@@ -26,12 +26,16 @@ public:
 
     void setTexture(GLuint textureID);
     void setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, float blendHeight);
+    void setTerrainTextures(GLuint grassTextureID, GLuint rockTextureID, GLuint snowTextureID, float rockBlendHeight, float snowBlendHeight);
     void setBlendHeight(float height);
+    void setSnowBlendHeight(float height);
     void enableTerrainBlending(bool enable);
     GLuint getTexture() const;
     GLuint getGrassTexture() const;
     GLuint getRockTexture() const;
+    GLuint getSnowTexture() const;
     float getBlendHeight() const;
+    float getSnowBlendHeight() const;
     bool isTerrainBlendingEnabled() const;
     std::vector<GLfloat> getVertices();
     std::vector<GLfloat> getNormals();
@@ -52,7 +56,9 @@ private:
     GLuint textureID = 0;
     GLuint grassTextureID = 0;
     GLuint rockTextureID = 0;
+    GLuint snowTextureID = 0;
     float blendHeight = 20.0f;
+    float snowBlendHeight = 40.0f;
     bool useTerrainBlending = false;
     GLfloat x = 0.0f;
     GLfloat y = 0.0f;

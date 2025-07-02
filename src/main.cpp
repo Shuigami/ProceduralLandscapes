@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     if (!init_shader()) return -1;
     if (!init_pov()) return -1;
 
-    Map map(42, 0.005f, 6, 0.4f, 2.0f, 7);
+    Map map(42, 0.005f, 6, 0.4f, 2.0f, 8);
     map.setFunction([](float x) { return std::pow(x, 6) * 2000.0f; });
     
     map.setFogNear(0.7f * z_far);

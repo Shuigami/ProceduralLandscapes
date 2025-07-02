@@ -29,6 +29,7 @@ Map::Map(int seed, float scale, int octaves, float persistence, float lacunarity
 
         textures["grass"] = Object::loadTexture("textures/grass.png");
         textures["snow"] = Object::loadTexture("textures/snow.jpg");
+        textures["cloud"] = Object::loadTexture("textures/white.png");
 }
 
 
@@ -312,7 +313,7 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
                 normals[normalIndex + 2] = normal.z;
             }
 
-            if (rand() % 100000 < 5 && vertices[i + 1] < blendHeight) {
+            if (rand() % 100000 < 10 && vertices[i + 1] < blendHeight) {
                 float treeX = vertices[i];
                 float treeY = vertices[i + 1];
                 float treeZ = vertices[i + 2];
@@ -323,6 +324,24 @@ std::vector<Object> Map::generateTerrain(float spacing, float offsetX, float off
                     t.rotate(rotateFactor, {0.0f, 1.0f, 0.0f});
                     terrainObjects.push_back(t);
                 }
+            }
+
+            if (rand() % 50000 < 3) { // Increased cloud generation probability
+                // Generate clouds at a higher altitude
+                float cloudX = vertices[i];
+                float cloudY = 200.0f + static_cast<float>(rand() % 40); // High altitude with more variation
+                float cloudZ = vertices[i + 2];
+                
+                // Random cloud size (larger clouds)
+                float cloudSize = 5.0f + static_cast<float>(rand() % 4);
+
+                Object cloud = Object::makeCloud(cloudX, cloudY, cloudZ, cloudSize);
+                
+                if (textures.find("cloud") != textures.end()) {
+                    cloud.setTexture(textures["cloud"]);
+                }
+                
+                terrainObjects.push_back(cloud);
             }
         }
     }
@@ -384,7 +403,7 @@ void Map::updateChunks(float cameraX, float cameraZ, float spacing) {
             ChunkCoord coord = {x, z};
             
             if (terrainChunks.find(coord) == terrainChunks.end()) {
-                std::cout << "Generating chunk (" << x << ", " << z << ")" << std::endl;
+                // std::cout << "Generating chunk (" << x << ", " << z << ")" << std::endl;
                 terrainChunks[coord] = generateTerrainChunk(coord, spacing);
             }
         }
@@ -399,7 +418,7 @@ void Map::removeDistantChunks(ChunkCoord centerChunk) {
         int distanceZ = std::abs(coord.z - centerChunk.z);
         
         if (distanceX > renderDistance + 1 || distanceZ > renderDistance + 1) {
-            std::cout << "Removing chunk (" << coord.x << ", " << coord.z << ")" << std::endl;
+            // std::cout << "Removing chunk (" << coord.x << ", " << coord.z << ")" << std::endl;
             it = terrainChunks.erase(it);
         } else {
             ++it;
@@ -426,6 +445,40 @@ std::vector<Object*> Map::getVisibleTerrains(float cameraX, float cameraZ, float
     }
     
     return visibleTerrains;
+}
+
+std::pair<std::vector<Object*>, std::vector<Object*>> Map::separateOpaqueAndTransparent(
+    const std::vector<Object*>& objects, float cameraX, float cameraZ) {
+    
+    std::vector<Object*> opaqueObjects;
+    std::vector<std::pair<Object*, float>> transparentWithDistance;
+    
+    for (Object* obj : objects) {
+        if (obj->getAlpha() < 1.0f) {
+            // Calculate distance from camera for back-to-front sorting
+            auto pos = obj->getPosition();
+            float dx = pos[0] - cameraX;
+            float dz = pos[2] - cameraZ;
+            float distance = dx * dx + dz * dz; // Square distance is sufficient for sorting
+            transparentWithDistance.push_back({obj, distance});
+        } else {
+            opaqueObjects.push_back(obj);
+        }
+    }
+    
+    // Sort transparent objects back-to-front (farthest first)
+    std::sort(transparentWithDistance.begin(), transparentWithDistance.end(),
+              [](const std::pair<Object*, float>& a, const std::pair<Object*, float>& b) {
+                  return a.second > b.second; // Greater distance first (back-to-front)
+              });
+    
+    // Extract sorted transparent objects
+    std::vector<Object*> transparentObjects;
+    for (const auto& pair : transparentWithDistance) {
+        transparentObjects.push_back(pair.first);
+    }
+    
+    return {opaqueObjects, transparentObjects};
 }
 
 void Map::setFogNear(float near) {

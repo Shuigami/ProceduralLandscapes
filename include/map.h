@@ -104,6 +104,10 @@ class Map {
         
         std::vector<Object*> getVisibleTerrains(float cameraX, float cameraZ, 
                                                float spacing = 1.0f);
+        
+        // Separate opaque and transparent objects for proper rendering order
+        std::pair<std::vector<Object*>, std::vector<Object*>> separateOpaqueAndTransparent(
+            const std::vector<Object*>& objects, float cameraX, float cameraZ);
 
         std::vector<Object> generateTerrain(float spacing = 1.0f, 
                               float offsetX = 0.0f, float offsetY = 0.0f);

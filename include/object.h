@@ -21,6 +21,7 @@ public:
     static Object makeCylinder();
     static Object makeTerrain(int width, int height, float spacing = 1.0f);
     static std::vector<Object> makeTree(float x, float y, float z);
+    static Object makeCloud(float x, float y, float z, float size = 1.0f);
 
     static GLuint loadTexture(const std::string& filename);
 
@@ -37,6 +38,11 @@ public:
     float getBlendHeight() const;
     float getSnowBlendHeight() const;
     bool isTerrainBlendingEnabled() const;
+    
+    // Alpha transparency support
+    void setAlpha(float alpha);
+    float getAlpha() const;
+    
     std::vector<GLfloat> getVertices();
     std::vector<GLfloat> getNormals();
     std::vector<GLfloat> getTexCoords();
@@ -63,4 +69,5 @@ private:
     GLfloat x = 0.0f;
     GLfloat y = 0.0f;
     GLfloat z = 0.0f;
+    float alpha = 1.0f;  // Default to fully opaque
 };
